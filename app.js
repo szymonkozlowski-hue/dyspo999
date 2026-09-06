@@ -72,34 +72,67 @@ function getUserLocation() {
     );
   });
 }
+// Pomocnicze obliczanie dystansu w metrach
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return Math.round(R * c);
+}
 
 async function fetchNearbyAEDs(lat, lon) {
   if (!lat || !lon) return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
 
-  // Szukamy w promieniu 1500m w bazie OpenStreetMap
+  // Zapytanie do OpenStreetMap w promieniu 2.5 km z pełnymi tagami
   const overpassQuery = `[out:json][timeout:5];
-    node["emergency"="defibrillator"](around:1500,${lat},${lon});
-    out body 5;`;
+    node["emergency"="defibrillator"](around:2500,${lat},${lon});
+    out body 10;`;
 
   try {
     const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
     const data = await res.json();
 
     if (!data.elements || data.elements.length === 0) {
-      return "W promieniu 1.5 km w rejestrze OpenStreetMap nie ma zarejestrowanych aparatów AED.";
+      return "W promieniu 2.5 km w rejestrze OpenStreetMap nie ma zarejestrowanych aparatów AED.";
     }
 
-    const aedList = data.elements.map((el, i) => {
+    // Wyciągnięcie i posortowanie wg odległości
+    const sortedAeds = data.elements.map(el => {
       const tags = el.tags || {};
-      const desc = tags.description || tags["defibrillator:location"] || tags["operator"] || "Aparat AED";
-      const street = tags["addr:street"] ? `przy ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}` : "";
-      return `${i + 1}. ${desc} ${street}`.trim();
-    }).join("; ");
+      const distance = calculateDistanceMeters(lat, lon, el.lat, el.lon);
 
-    return `RZECZYWISTE PUNKTY AED W NAJBLIŻSZEJ OKOLICY ZGŁASZAJĄCEGO (z bazy OpenStreetMap): ${aedList}`;
+      // Budowanie adresu
+      let addressParts = [];
+      if (tags["addr:street"]) {
+        addressParts.push(`ul. ${tags["addr:street"]}`);
+        if (tags["addr:housenumber"]) addressParts.push(tags["addr:housenumber"]);
+      }
+      if (tags["addr:city"]) addressParts.push(tags["addr:city"]);
+      const fullAddress = addressParts.length > 0 ? addressParts.join(" ") : "Brak numeru w rejestrze (lokalizacja według współrzędnych OSM)";
+
+      // Budowanie opisu miejsca
+      const desc = tags["defibrillator:location"] || tags["description"] || tags["operator"] || tags["name"] || "Aparat AED";
+
+      return {
+        distance,
+        text: `Odległość: ok. ${distance} m | Adres: ${fullAddress} | Umiejscowienie/Opis: ${desc}`
+      };
+    }).sort((a, b) => a.distance - b.distance);
+
+    const formattedList = sortedAeds.map((aed, idx) => `PUNKT ${idx + 1} (Najbliższy): ${aed.text}`).join("\n");
+
+    return `ZAREJESTROWANE APARATY AED W OKOLICY (posortowane od najbliższego):\n${formattedList}`;
   } catch (e) {
-    console.warn("Błąd pobierania bazy OSM:", e);
-    return "Nie udało się połączyć z bazą OpenStreetMap. Wskaż realistyczny punkt zastępczy.";
+    console.warn("Błąd bazy OSM:", e);
+    return "Nie udało się pobrać bazy OpenStreetMap. Wskaż realistyczny punkt w pobliżu.";
   }
 }
 
