@@ -319,7 +319,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Odtwarzanie zapowiedzi IVR (3 do 6 powtórzeń z przerwą 1s)
 async function playWaitMessageSequence() {
   const status = document.getElementById("call-status");
-  const repeatCount = Math.floor(Math.random() * (6 - 3 + 1)) + 3;
+  const repeatCount = Math.floor(Math.random() * (5 - 3 + 1)) + 3;
 
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
