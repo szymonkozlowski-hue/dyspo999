@@ -5,7 +5,6 @@ let audioContext = null;
 let mediaStream = null;
 let audioProcessor = null;
 
-// 1. Logowanie do stacji
 function checkAuth() {
   const entered = document.getElementById("pass-input").value;
   if (entered === CONFIG.STATION_PASSWORD) {
@@ -27,7 +26,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 2. Klawiatura numeryczna
 function pressKey(digit) {
   if (isConnected) return;
   if (currentNumber.length < 5) {
@@ -46,12 +44,24 @@ function updateDisplay() {
   document.getElementById("phone-display").innerText = currentNumber;
 }
 
-// 3. Rozpoczęcie połączenia
+function showError(msg) {
+  const status = document.getElementById("call-status");
+  status.innerText = msg;
+  status.style.color = "#f87171";
+  document.getElementById("call-btn").style.display = "flex";
+  document.getElementById("hangup-btn").style.display = "none";
+  isConnected = false;
+}
+
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
-    const status = document.getElementById("call-status");
-    status.innerText = "Niepoprawny numer. Wybierz 999 lub 112.";
-    status.style.color = "#f87171";
+    showError("Niepoprawny numer. Wybierz 999 lub 112.");
+    return;
+  }
+
+  // Weryfikacja czy wklejono poprawny klucz API
+  if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY.includes("TUTAJ_WKLEJ")) {
+    showError("BŁĄD: W pliku config.js brakuje Twojego klucza Gemini API!");
     return;
   }
 
@@ -63,35 +73,45 @@ async function startCall() {
   isConnected = true;
 
   try {
-    // Pobieramy procedury z pliku procedury.txt
     const rulesRes = await fetch("procedury.txt");
     const systemPrompt = await rulesRes.text();
-
     await initLiveConnection(systemPrompt);
   } catch (err) {
-    console.error("Błąd połączenia:", err);
-    status.innerText = "Błąd połączenia. Sprawdź uprawnienia mikrofonu.";
-    status.style.color = "#f87171";
-    endCall();
+    showError("Błąd inicjalizacji: " + err.message);
   }
 }
 
-// 4. Połączenie z Gemini Multimodal Live API
 async function initLiveConnection(instructions) {
   const status = document.getElementById("call-status");
-  audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
 
-  // Endpoint WebSocket Gemini Live
+  // Inicjalizacja dźwięku
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+  } catch (e) {
+    showError("Błąd AudioContext: " + e.message);
+    return;
+  }
+
+  // Sprawdzenie mikrofonu przed połączeniem
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    showError("Brak dostępu do mikrofonu. Zezwól w przeglądarce!");
+    return;
+  }
+
   const host = "generativelanguage.googleapis.com";
   const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
   webSocket = new WebSocket(uri);
 
-  webSocket.onopen = async () => {
-    status.innerText = "Połączono. Dyspozytor Medyczny 2137 słucha...";
+  webSocket.onopen = () => {
+    status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
     status.style.color = "#4ade80";
 
-    // Konfiguracja sesji i narzędzi (Tool Calling dla AED)
     const setupMessage = {
       setup: {
         model: "models/gemini-2.0-flash-exp",
@@ -105,84 +125,47 @@ async function initLiveConnection(instructions) {
         },
         systemInstruction: {
           parts: [{ text: instructions }]
-        },
-        tools: [
-          {
-            functionDeclarations: [
-              {
-                name: "znajdz_aed",
-                description: "Szuka najbliższego defibrylatora AED na podstawie adresu.",
-                parameters: {
-                  type: "OBJECT",
-                  properties: {
-                    address: {
-                      type: "STRING",
-                      description: "Pełny adres zdarzenia: ulica, numer, miejscowość oraz województwo"
-                    }
-                  },
-                  required: ["address"]
-                }
-              }
-            ]
-          }
-        ]
+        }
       }
     };
 
     webSocket.send(JSON.stringify(setupMessage));
-    await startMicrophone();
+    startAudioStreaming();
   };
 
   webSocket.onmessage = async (event) => {
-    let data;
-    if (event.data instanceof Blob) {
-      data = JSON.parse(await event.data.text());
-    } else {
-      data = JSON.parse(event.data);
-    }
+    try {
+      let data;
+      if (event.data instanceof Blob) {
+        data = JSON.parse(await event.data.text());
+      } else {
+        data = JSON.parse(event.data);
+      }
 
-    // Obsługa wywołania narzędzia AED
-    if (data.toolCall) {
-      for (const call of data.toolCall.functionCalls) {
-        if (call.name === "znajdz_aed") {
-          const result = await lookupAED(call.args.address);
-          const responseMsg = {
-            toolResponse: {
-              functionResponses: [
-                {
-                  response: { output: result },
-                  id: call.id
-                }
-              ]
-            }
-          };
-          webSocket.send(JSON.stringify(responseMsg));
+      if (data.serverContent?.modelTurn?.parts) {
+        for (const part of data.serverContent.modelTurn.parts) {
+          if (part.inlineData?.data) {
+            playAudioChunk(part.inlineData.data);
+          }
         }
       }
-    }
-
-    // Odtwarzanie dźwięku z Gemini
-    if (data.serverContent?.modelTurn?.parts) {
-      for (const part of data.serverContent.modelTurn.parts) {
-        if (part.inlineData?.data) {
-          playAudioChunk(part.inlineData.data);
-        }
-      }
+    } catch (err) {
+      console.error("Błąd przetwarzania wiadomości:", err);
     }
   };
 
   webSocket.onerror = (err) => {
-    console.error("Błąd WebSocket:", err);
+    showError("Błąd sieci WebSocket Gemini.");
   };
 
-  webSocket.onclose = () => {
-    endCall();
+  webSocket.onclose = (event) => {
+    if (isConnected) {
+      showError(`Rozłączono przez serwer (Kod: ${event.code}, Powód: ${event.reason || 'brak'})`);
+    }
   };
 }
 
-// 5. Obsługa mikrofonu
-async function startMicrophone() {
-  mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+function startAudioStreaming() {
   const inputAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
   const source = inputAudioCtx.createMediaStreamSource(mediaStream);
   
@@ -191,57 +174,34 @@ async function startMicrophone() {
   audioProcessor.connect(inputAudioCtx.destination);
 
   audioProcessor.onaudioprocess = (e) => {
-    if (!isConnected || webSocket?.readyState !== WebSocket.OPEN) return;
+    if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
+    
     const inputData = e.inputBuffer.getChannelData(0);
     const pcm16 = new Int16Array(inputData.length);
     for (let i = 0; i < inputData.length; i++) {
       pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7fff;
     }
     
-    // Konwersja na Base64
-    const buffer = pcm16.buffer;
+    const bytes = new Uint8Array(pcm16.buffer);
     let binary = "";
-    const bytes = new Uint8Array(buffer);
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
     const base64Audio = btoa(binary);
 
-    const clientContent = {
+    webSocket.send(JSON.stringify({
       realtimeInput: {
-        mediaChunks: [
-          {
-            mimeType: "audio/pcm;rate=16000",
-            data: base64Audio
-          }
-        ]
+        mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Audio }]
       }
-    };
-    webSocket.send(JSON.stringify(clientContent));
+    }));
   };
 }
 
-// 6. Odpytanie serwera Render o AED
-async function lookupAED(address) {
-  try {
-    const res = await fetch(CONFIG.AED_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: address })
-    });
-    return await res.json();
-  } catch (err) {
-    return { status: "not_found", message: "Brak danych o AED w tym rejonie." };
-  }
-}
-
-// 7. Odtwarzanie strumienia głosu
 let nextStartTime = 0;
 function playAudioChunk(base64Data) {
   const binaryString = atob(base64Data);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
 
@@ -266,7 +226,6 @@ function playAudioChunk(base64Data) {
   nextStartTime += audioBuffer.duration;
 }
 
-// 8. Rozłączenie
 function endCall() {
   isConnected = false;
   currentNumber = "";
