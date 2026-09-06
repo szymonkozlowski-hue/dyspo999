@@ -55,7 +55,27 @@ function showError(msg) {
   document.getElementById("hangup-btn").style.display = "none";
   isConnected = false;
 }
+// Blokada wygaszania ekranu
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log("Ekran zablokowany przed wygaszeniem.");
+    }
+  } catch (err) {
+    console.warn(`Błąd Wake Lock: ${err.name}, ${err.message}`);
+  }
+}
 
+// Zwolnienie blokady ekranu
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release().then(() => {
+      wakeLock = null;
+      console.log("Blokada wygaszania ekranu zwolniona.");
+    });
+  }
+}
 // 3. Pobieranie GPS i wyszukiwanie realnych AED z OpenStreetMap (Wariant B)
 function getUserLocation() {
   return new Promise((resolve) => {
@@ -295,7 +315,8 @@ async function startCall() {
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
-
+await requestWakeLock(); // Utrzymuje włączony ekran
+  
   // 1. Uruchamiamy odtwarzanie zapowiedzi czekaj.mp3
   const ivrPromise = playWaitMessageSequence();
 
@@ -531,4 +552,5 @@ function endCall() {
   status.style.color = "#9ca3af";
   document.getElementById("call-btn").style.display = "flex";
   document.getElementById("hangup-btn").style.display = "none";
+  releaseWakeLock(); // Pozwala na ponowne wygaszanie ekranu
 }
