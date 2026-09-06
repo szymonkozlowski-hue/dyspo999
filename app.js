@@ -309,7 +309,7 @@ async function startCall() {
     const detectedModel = await checkAvailableModels();
     if (!detectedModel) return null;
 
-    const rulesRes = await fetch("procedury.txt");
+    const rulesRes = await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" });
     let systemPrompt = await rulesRes.text();
 
     if (aedContext) {
