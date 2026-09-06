@@ -55,7 +55,55 @@ function showError(msg) {
   isConnected = false;
 }
 
-// 3. Dynamiczne wykrycie obsługiwanego modelu Live API
+// 3. Pobieranie GPS i wyszukiwanie realnych AED z OpenStreetMap (Wariant B)
+function getUserLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      (err) => {
+        console.warn("Brak dostępu do GPS:", err.message);
+        resolve(null);
+      },
+      { timeout: 4000, maximumAge: 60000 }
+    );
+  });
+}
+
+async function fetchNearbyAEDs(lat, lon) {
+  if (!lat || !lon) return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
+
+  // Szukamy w promieniu 1500m w bazie OpenStreetMap
+  const overpassQuery = `[out:json][timeout:5];
+    node["emergency"="defibrillator"](around:1500,${lat},${lon});
+    out body 5;`;
+
+  try {
+    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+    const data = await res.json();
+
+    if (!data.elements || data.elements.length === 0) {
+      return "W promieniu 1.5 km w rejestrze OpenStreetMap nie ma zarejestrowanych aparatów AED.";
+    }
+
+    const aedList = data.elements.map((el, i) => {
+      const tags = el.tags || {};
+      const desc = tags.description || tags["defibrillator:location"] || tags["operator"] || "Aparat AED";
+      const street = tags["addr:street"] ? `przy ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}` : "";
+      return `${i + 1}. ${desc} ${street}`.trim();
+    }).join("; ");
+
+    return `RZECZYWISTE PUNKTY AED W NAJBLIŻSZEJ OKOLICY ZGŁASZAJĄCEGO (z bazy OpenStreetMap): ${aedList}`;
+  } catch (e) {
+    console.warn("Błąd pobierania bazy OSM:", e);
+    return "Nie udało się połączyć z bazą OpenStreetMap. Wskaż realistyczny punkt zastępczy.";
+  }
+}
+
+// 4. Dynamiczne wykrycie obsługiwanego modelu Live API
 async function checkAvailableModels() {
   const status = document.getElementById("call-status");
   status.innerText = "Weryfikacja modeli Live API...";
@@ -70,23 +118,15 @@ async function checkAvailableModels() {
       return null;
     }
 
-    if (!data.models || !Array.isArray(data.models)) {
-      showError("Nieoczekiwana odpowiedź API podczas pobierania modeli.");
-      return null;
-    }
-
-    // Szukamy modeli ze wsparciem dla protokołu bidiGenerateContent
     const bidiModels = data.models
-      .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
+      ?.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
       .map(m => m.name);
 
-    if (bidiModels.length > 0) {
-      console.log("Znalezione modele Bidi:", bidiModels);
-      // Preferowany model flash/realtime jeśli dostępny, w przeciwnym razie pierwszy dostępny
+    if (bidiModels && bidiModels.length > 0) {
       const preferred = bidiModels.find(m => m.includes("flash")) || bidiModels[0];
       return preferred;
     } else {
-      showError("Twój klucz nie ma włączonej obsługi dwukierunkowego Live API (BidiGenerateContent).");
+      showError("Twój klucz nie ma włączonej obsługi dwukierunkowego Live API.");
       return null;
     }
   } catch (err) {
@@ -95,15 +135,10 @@ async function checkAvailableModels() {
   }
 }
 
-// 4. Rozpoczęcie połączenia
+// 5. Rozpoczęcie połączenia
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
     showError("Niepoprawny numer. Wybierz 999 lub 112.");
-    return;
-  }
-
-  if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY.includes("TUTAJ_WKLEJ")) {
-    showError("BŁĄD: W pliku config.js brakuje klucza Gemini API!");
     return;
   }
 
@@ -111,22 +146,39 @@ async function startCall() {
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
 
+  const status = document.getElementById("call-status");
+  status.innerText = "Ustalanie pozycji i bazy AED...";
+  status.style.color = "#fbbf24";
+
+  // Pobranie GPS i zapytanie do OpenStreetMap przed zestawieniem połączenia
+  const coords = await getUserLocation();
+  let aedContext = "";
+  if (coords) {
+    aedContext = await fetchNearbyAEDs(coords.lat, coords.lon);
+  }
+
   const detectedModel = await checkAvailableModels();
   if (!detectedModel) return;
 
   try {
     const rulesRes = await fetch("procedury.txt");
-    const systemPrompt = await rulesRes.text();
+    let systemPrompt = await rulesRes.text();
+
+    // Wstrzyknięcie realnych danych z OpenStreetMap wprost do instrukcji systemowej
+    if (aedContext) {
+      systemPrompt += `\n\n[DANE SYSTEMOWE DYSPYZYTORA - PUNKTY AED]:\n${aedContext}\nUżyj tych konkretnych punktów, instruując świadka o wysłaniu kogoś po AED.`;
+    }
+
     await initLiveConnection(systemPrompt, detectedModel);
   } catch (err) {
     showError("Błąd inicjalizacji: " + err.message);
   }
 }
 
-// 5. Połączenie WebSocket z Gemini Live
+// 6. Połączenie WebSocket z Gemini Live
 async function initLiveConnection(instructions, modelName) {
   const status = document.getElementById("call-status");
-  status.innerText = `Łączenie z modelem: ${modelName.replace('models/', '')}...`;
+  status.innerText = `Łączenie z dyspozytorem...`;
   status.style.color = "#fbbf24";
 
   try {
@@ -160,29 +212,9 @@ async function initLiveConnection(instructions, modelName) {
     status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
     status.style.color = "#4ade80";
 
-const setupMessage = {
+    const setupMessage = {
       setup: {
         model: modelName,
-        tools: [
-          {
-            functionDeclarations: [
-              {
-                name: "find_nearest_aed",
-                description: "Wyszukuje najbliższy dostępny defibrylator AED na podstawie lokalizacji lub adresu podanego przez dzwoniącego.",
-                parameters: {
-                  type: "OBJECT",
-                  properties: {
-                    location: {
-                      type: "STRING",
-                      description: "Miasto, ulica lub charakterystyczny punkt podany przez zgłaszającego."
-                    }
-                  },
-                  required: ["location"]
-                }
-              }
-            ]
-          }
-        ],
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
@@ -210,55 +242,10 @@ const setupMessage = {
         data = JSON.parse(event.data);
       }
 
-      // 1. Odtwarzanie dźwięku
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
             playAudioChunk(part.inlineData.data);
-          }
-        }
-      }
-
-     // 2. Obsługa wyszukiwania AED (Function Calling)
-      if (data.toolCall?.functionCalls) {
-        for (const call of data.toolCall.functionCalls) {
-          if (call.name === "find_nearest_aed") {
-            const loc = call.args?.location || "centrum miasta";
-            console.log("Model zapytał o AED dla lokalizacji:", loc);
-
-            let aedLocationText = `w holu głównym dworca lub aptece w pobliżu: ${loc}`;
-
-            // Jeśli serwer zewnętrzny jest skonfigurowany, odpytaj go
-            if (CONFIG.AED_API_URL && !CONFIG.AED_API_URL.includes("twoj-serwer")) {
-              try {
-                const res = await fetch(`${CONFIG.AED_API_URL}?query=${encodeURIComponent(loc)}`);
-                const aedData = await res.json();
-                if (aedData.address || aedData.location) {
-                  aedLocationText = aedData.address || aedData.location;
-                }
-              } catch (e) {
-                console.warn("Błąd backendu AED, używam lokalizacji domyślnej:", e);
-              }
-            }
-
-            // Odesłanie odpowiedzi narzędzia do Gemini Live API
-            const toolReply = {
-              toolResponse: {
-                functionResponses: [
-                  {
-                    response: {
-                      output: {
-                        nearest_aed_address: aedLocationText
-                      }
-                    },
-                    id: call.id
-                  }
-                ]
-              }
-            };
-
-            console.log("Wysyłam odpowiedź narzędzia:", toolReply);
-            webSocket.send(JSON.stringify(toolReply));
           }
         }
       }
@@ -279,7 +266,7 @@ const setupMessage = {
   };
 }
 
-// 6. Przesyłanie strumienia głosu z mikrofonu
+// 7. Przesyłanie strumienia głosu z mikrofonu
 function startAudioStreaming() {
   const inputAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
   const source = inputAudioCtx.createMediaStreamSource(mediaStream);
@@ -312,10 +299,9 @@ function startAudioStreaming() {
   };
 }
 
-// 7. Odtwarzanie głosu dyspozytora
-// Płynny bufor odtwarzania z ochroną przed jitterem
+// 8. Odtwarzanie głosu dyspozytora
 let nextStartTime = 0;
-const BUFFER_DELAY = 0.12; // 120ms bufora wygładzającego
+const BUFFER_DELAY = 0.12;
 
 function playAudioChunk(base64Data) {
   if (!audioContext) return;
@@ -341,7 +327,6 @@ function playAudioChunk(base64Data) {
 
   const currentTime = audioContext.currentTime;
 
-  // Jeśli bufor wypadł z rytmu (przerwa w sieci), zresetuj czas z małym marginesem
   if (nextStartTime < currentTime) {
     nextStartTime = currentTime + BUFFER_DELAY;
   }
@@ -349,7 +334,8 @@ function playAudioChunk(base64Data) {
   source.start(nextStartTime);
   nextStartTime += audioBuffer.duration;
 }
-// 8. Zakończenie połączenia
+
+// 9. Zakończenie połączenia
 function endCall() {
   isConnected = false;
   currentNumber = "";
