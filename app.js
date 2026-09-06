@@ -496,9 +496,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     const setupPayload = {
       model: modelName,
       generationConfig: {
-        responseModalities: ["AUDIO"], 
+        responseModalities: ["AUDIO", "TEXT"], // <-- TUTAJ MUSI BYĆ TEXT, ABY PRZYCISK ZADZIAŁAŁ
         speechConfig: {
-          voiceConfig: {
             prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
           }
         }
