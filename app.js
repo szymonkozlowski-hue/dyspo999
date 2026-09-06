@@ -554,3 +554,8 @@ function endCall() {
   document.getElementById("hangup-btn").style.display = "none";
   releaseWakeLock(); // Pozwala na ponowne wygaszanie ekranu
 }
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible' && isConnected) {
+    await requestWakeLock();
+  }
+});
