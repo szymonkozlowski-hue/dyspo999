@@ -254,6 +254,36 @@ async function checkAvailableModels() {
   }
 }
 
+// Pomocnicza funkcja do opóźnień
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Odtwarzanie zapowiedzi IVR (3 do 6 powtórzeń z przerwą 1s)
+async function playWaitMessageSequence() {
+  const status = document.getElementById("call-status");
+  const repeatCount = Math.floor(Math.random() * (6 - 3 + 1)) + 3;
+
+  for (let i = 0; i < repeatCount; i++) {
+    if (!isConnected) break;
+
+    status.innerText = `Łączenie z centralą 999... (${i + 1}/${repeatCount})`;
+    status.style.color = "#fbbf24";
+
+    await new Promise((resolve) => {
+      const waitAudio = new Audio("czekaj.mp3");
+      waitAudio.onended = resolve;
+      waitAudio.onerror = () => {
+        console.warn("Brak pliku czekaj.mp3, pomijam zapowiedź.");
+        resolve();
+      };
+      waitAudio.play().catch(() => resolve());
+    });
+
+    if (i < repeatCount - 1 && isConnected) {
+      await sleep(1000);
+    }
+  }
+}
+
 // 5. Rozpoczęcie połączenia
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
@@ -265,33 +295,41 @@ async function startCall() {
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
 
-  const status = document.getElementById("call-status");
-  status.innerText = "Ustalanie pozycji i bazy AED...";
-  status.style.color = "#fbbf24";
+  // 1. Uruchamiamy odtwarzanie zapowiedzi czekaj.mp3
+  const ivrPromise = playWaitMessageSequence();
 
-  // Pobranie GPS i zapytanie do OpenStreetMap przed zestawieniem połączenia
-  const coords = await getUserLocation();
-  let aedContext = "";
-  if (coords) {
-    aedContext = await fetchNearbyAEDs(coords.lat, coords.lon);
-  }
+  // 2. W tle równolegle pobieramy GPS, bazę AED i model
+  const setupPromise = (async () => {
+    const coords = await getUserLocation();
+    let aedContext = "";
+    if (coords) {
+      aedContext = await fetchNearbyAEDs(coords.lat, coords.lon);
+    }
 
-  const detectedModel = await checkAvailableModels();
-  if (!detectedModel) return;
+    const detectedModel = await checkAvailableModels();
+    if (!detectedModel) return null;
 
-  try {
     const rulesRes = await fetch("procedury.txt");
     let systemPrompt = await rulesRes.text();
 
-    // Wstrzyknięcie realnych danych z OpenStreetMap wprost do instrukcji systemowej
     if (aedContext) {
       systemPrompt += `\n\n[DANE SYSTEMOWE DYSPYZYTORA - PUNKTY AED]:\n${aedContext}\nUżyj tych konkretnych punktów, instruując świadka o wysłaniu kogoś po AED.`;
     }
 
-    await initLiveConnection(systemPrompt, detectedModel);
-  } catch (err) {
-    showError("Błąd inicjalizacji: " + err.message);
+    return { systemPrompt, detectedModel };
+  })();
+
+  // Czekamy aż skończą się komunikaty audio ORAZ przygotują dane
+  const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
+
+  if (!isConnected) return;
+
+  if (!setupData || !setupData.detectedModel) {
+    showError("Nie udało się połączyć z modelem dyspozytora.");
+    return;
   }
+
+  await initLiveConnection(setupData.systemPrompt, setupData.detectedModel);
 }
 
 // 6. Połączenie WebSocket z Gemini Live
@@ -327,8 +365,8 @@ async function initLiveConnection(instructions, modelName) {
   const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
   webSocket = new WebSocket(uri);
 
-  webSocket.onopen = () => {
-    status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
+ webSocket.onopen = () => {
+    status.innerText = "Połączenie odebrane. Dyspozytor zgłasza się...";
     status.style.color = "#4ade80";
 
     const setupMessage = {
@@ -349,6 +387,20 @@ async function initLiveConnection(instructions, modelName) {
     };
 
     webSocket.send(JSON.stringify(setupMessage));
+
+    // Wymuszenie, by dyspozytor odezwał się natychmiast po odebraniu
+    webSocket.send(JSON.stringify({
+      clientContent: {
+        turns: [
+          {
+            role: "user",
+            parts: [{ text: "Odbierasz połączenie 999. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora medycznego i zapytaj o adres zdarzenia." }]
+          }
+        ],
+        turnComplete: true
+      }
+    }));
+
     startAudioStreaming();
   };
 
