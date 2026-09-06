@@ -540,6 +540,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     resetSilenceTimer();
   };
 
+  let isTransferring = false; // Zabezpieczenie przed podwójnym / przedwczesnym odpaleniem
+
   webSocket.onmessage = async (event) => {
     try {
       let data;
@@ -555,9 +557,15 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
             playAudioChunk(part.inlineData.data);
           }
 
-          // Wykrycie kodu zakończenia wywiadu przez operatora CPR
-          if (part.text && part.text.includes("PRZEŁĄCZ_DO_999") && callMode === "cpr") {
-            console.log("Operator CPR kończy wywiad wstępny. Następuje transfer do 999...");
+          // Sprawdzamy czy w transkrypcji pojawiła się informacja o przełączeniu
+          const textChunk = part.text || "";
+          if (
+            callMode === "cpr" && 
+            !isTransferring && 
+            (textChunk.includes("PRZEŁĄCZ_DO_999") || textChunk.toLowerCase().includes("przełączam"))
+          ) {
+            isTransferring = true;
+            console.log("Operator CPR zainicjował procedurę transferu do 999.");
             handleTransferTo999();
             return;
           }
