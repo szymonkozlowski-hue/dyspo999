@@ -1,11 +1,7 @@
-// KONFIGURACJA STACJI TRENINGOWEJ
+const ENCODED_KEY = "TUTAJ_WKLEJ_ZAKODOWANY_CIĄG_BASE64";
+
 const CONFIG = {
-  // Hasło dostępu do stacji treningowej (możesz je zmieniać w dowolnym momencie):
+  GEMINI_API_KEY: atob(ENCODED_KEY),
   STATION_PASSWORD: "pgrm2026",
-
-  // Twój darmowy klucz API z Google AI Studio:
-  GEMINI_API_KEY: "QVEuQWI4Uk42SWtQeXRUQzlPb0FNMTJtWGlJVUNzdktlWkdtRGZZZG9hQXdfWDV2Q05saGc=",
-
-  // Adres Twojego działającego serwera AED na Renderze:
-  AED_API_URL: "https://aed-finder.onrender.com/find-aed"
+   AED_API_URL: "https://aed-finder.onrender.com/find-aed"
 };
