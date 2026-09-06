@@ -122,18 +122,25 @@ async function fetchNearbyAEDs(lat, lon) {
       const tags = el.tags || {};
       const distance = calculateDistanceMeters(lat, lon, el.lat, el.lon);
 
-      // Budowanie adresu
+  // Budowanie adresu z pełniejszą obsługą tagów OSM
       let addressParts = [];
       if (tags["addr:street"]) {
         addressParts.push(`ul. ${tags["addr:street"]}`);
         if (tags["addr:housenumber"]) addressParts.push(tags["addr:housenumber"]);
+      } else if (tags["addr:place"]) {
+        addressParts.push(tags["addr:place"]);
       }
+
       if (tags["addr:city"]) addressParts.push(tags["addr:city"]);
-      const fullAddress = addressParts.length > 0 ? addressParts.join(" ") : "Brak numeru w rejestrze (lokalizacja według współrzędnych OSM)";
 
-      // Budowanie opisu miejsca
-      const desc = tags["defibrillator:location"] || tags["description"] || tags["operator"] || tags["name"] || "Aparat AED";
+      // Jeśli węzeł w bazie nie ma wpisanej ulicy, bierzemy nazwę punktu / instytucji
+      const locationName = tags["name"] || tags["operator"] || "";
+      const fullAddress = addressParts.length > 0 
+        ? addressParts.join(" ") 
+        : (locationName ? `${locationName} (brak numeru ulicy w bazie)` : "Punkt w terenie (wg współrzędnych)");
 
+      // Budowanie opisu miejsca montażu
+      const desc = tags["defibrillator:location"] || tags["description"] || tags["access"] || "Dostępny publicznie";
       return {
         distance,
         text: `Odległość: ok. ${distance} m | Adres: ${fullAddress} | Umiejscowienie/Opis: ${desc}`
