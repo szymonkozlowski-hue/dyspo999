@@ -5,6 +5,8 @@ let audioContext = null;
 let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
+let silenceTimer = null;
+const SILENCE_TIMEOUT_MS = 7000; // 7 sekund ciszy do pierwszej reakcji
 
 // 1. Weryfikacja hasła stacji
 function checkAuth() {
@@ -48,6 +50,7 @@ function updateDisplay() {
 }
 
 function showError(msg) {
+  clearTimeout(silenceTimer); // Zwalnia timer ciszy przy błędzie
   releaseWakeLock(); // Zwalnia blokadę przy błędzie
   const status = document.getElementById("call-status");
   status.innerText = msg;
@@ -56,6 +59,39 @@ function showError(msg) {
   document.getElementById("hangup-btn").style.display = "none";
   isConnected = false;
 }
+
+function resetSilenceTimer() {
+  clearTimeout(silenceTimer);
+  if (!isConnected) return;
+
+  // Obliczamy ile milisekund będzie jeszcze mówił dyspozytor
+  let remainingSpeakingTime = 0;
+  if (audioContext && nextStartTime > audioContext.currentTime) {
+    remainingSpeakingTime = (nextStartTime - audioContext.currentTime) * 1000;
+  }
+
+  // Czas ciszy (7s) zaczyna płynąć dopiero po zakończeniu mowy dyspozytora
+  silenceTimer = setTimeout(() => {
+    triggerSilencePrompt();
+  }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
+}
+function triggerSilencePrompt() {
+  if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
+
+  // Ukryty impuls zmuszający model do odezwania się przy braku głosu ze strony kursanta
+  webSocket.send(JSON.stringify({
+    clientContent: {
+      turns: [
+        {
+          role: "user",
+          parts: [{ text: "[SYSTEM: Zgłaszający milczy i nie odpowiada od kilku sekund. Zareaguj zgodnie z procedurą: zawołaj go po imieniu/halo lub zapytaj, czy masz pozostać na linii]." }]
+        }
+      ],
+      turnComplete: true
+    }
+  }));
+}
+
 // Blokada wygaszania ekranu
 async function requestWakeLock() {
   try {
@@ -427,7 +463,7 @@ async function initLiveConnection(instructions, modelName) {
     startAudioStreaming();
   };
 
-  webSocket.onmessage = async (event) => {
+webSocket.onmessage = async (event) => {
     try {
       let data;
       if (event.data instanceof Blob) {
@@ -442,6 +478,8 @@ async function initLiveConnection(instructions, modelName) {
             playAudioChunk(part.inlineData.data);
           }
         }
+        // Uruchamiamy odliczanie dopiero po załadowaniu całej odebranej frazy do odtworzenia
+        resetSilenceTimer();
       }
     } catch (err) {
       console.error("Błąd parsowania:", err);
@@ -473,6 +511,14 @@ function startAudioStreaming() {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
     
     const inputData = e.inputBuffer.getChannelData(0);
+    // Sprawdzenie czy użytkownik mówi (przekroczenie progu szumu)
+  let sum = 0;
+  for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
+  const rms = Math.sqrt(sum / inputData.length);
+  if (rms > 0.02) {
+    // Kursant mówi – resetujemy licznik ciszy
+    resetSilenceTimer();
+  }
     const pcm16 = new Int16Array(inputData.length);
     for (let i = 0; i < inputData.length; i++) {
       pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7fff;
@@ -531,6 +577,7 @@ function playAudioChunk(base64Data) {
 
 // 9. Zakończenie połączenia
 function endCall() {
+  clearTimeout(silenceTimer);
   isConnected = false;
   currentNumber = "";
   updateDisplay();
