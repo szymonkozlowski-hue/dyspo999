@@ -1,3 +1,39 @@
+async function checkAvailableModels() {
+  const status = document.getElementById("call-status");
+  status.innerText = "Sprawdzam obsługiwane modele...";
+  status.style.color = "#fbbf24";
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
+    const data = await res.json();
+
+    if (data.error) {
+      showError("Błąd klucza API: " + data.error.message);
+      return;
+    }
+
+    // Filtrujemy modele wspierające bidiGenerateContent (połączenie na żywo)
+    const bidiModels = data.models
+      .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
+      .map(m => m.name);
+
+    if (bidiModels.length > 0) {
+      status.innerText = "Dostępny model: " + bidiModels[0];
+      status.style.color = "#4ade80";
+      console.log("Obsługiwane modele Bidi:", bidiModels);
+      return bidiModels[0];
+    } else {
+      showError("Twój klucz nie ma jeszcze dostępu do modeli Live (BidiGenerateContent).");
+      console.log("Wszystkie modele dla klucza:", data.models.map(m => m.name));
+      return null;
+    }
+  } catch (err) {
+    showError("Błąd sieci przy pobieraniu modeli: " + err.message);
+    return null;
+  }
+}
+
+
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
