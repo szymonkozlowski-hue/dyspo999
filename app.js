@@ -17,8 +17,8 @@ let silenceTimer = null;
 
 // Buforowanie dźwięku i timery
 let nextStartTime = 0;
-const BUFFER_DELAY = 0.25;         // Bufor 250ms chroniący przed ucinaniem głosek
-const SILENCE_TIMEOUT_MS = 6000;   // 6 sekund ciszy do pierwszej reakcji dyspozytora
+const BUFFER_DELAY = 0.25;
+const SILENCE_TIMEOUT_MS = 6000;
 
 // Pamięć podręczna procedur i modelu na wypadek transferu z 112 do 999
 let savedMedicalContext = { 
@@ -172,7 +172,6 @@ function getUserLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        console.log(`GPS ustalony: lat=${pos.coords.latitude}, lon=${pos.coords.longitude}, dokładność: ${Math.round(pos.coords.accuracy)}m`);
         resolve({ 
           lat: pos.coords.latitude, 
           lon: pos.coords.longitude, 
@@ -180,7 +179,6 @@ function getUserLocation() {
         });
       },
       (err) => {
-        console.warn("Błąd GPS:", err.message);
         resolve(null);
       },
       { 
@@ -224,7 +222,6 @@ async function reverseGeocode(lat, lon) {
     }
     return data.display_name?.split(",").slice(0, 2).join(",") || "Adres z mapy";
   } catch (err) {
-    console.warn("Błąd Reverse Geocoding:", err);
     return null;
   }
 }
@@ -280,8 +277,8 @@ async function fetchNearbyAEDs(lat, lon) {
     for (let i = 0; i < topCandidates.length; i++) {
       const item = topCandidates[i];
       const tags = item.el.tags || {};
-      const placeName = tags["name"] || tags["operator"] || "Budynek użyteczności publicznej / obiekt komercyjny";
-      const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie / przy wejściu głównym";
+      const placeName = tags["name"] || tags["operator"] || "Budynek użyteczności publicznej";
+      const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie / przy wejściu";
       
       let address = "";
       if (tags["addr:street"]) {
@@ -309,7 +306,6 @@ async function fetchNearbyAEDs(lat, lon) {
     return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${formattedList}`;
 
   } catch (e) {
-    console.error("Błąd bazy AED:", e);
     status.innerText = "Błąd bazy lokalnej!";
     return "Nie udało się ustalić bazy AED. Wskaż typowy punkt zastępczy.";
   }
@@ -367,7 +363,6 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
       const waitAudio = new Audio(audioFile);
       waitAudio.onended = resolve;
       waitAudio.onerror = () => {
-        console.warn(`Brak pliku ${audioFile}, pomijam zapowiedź.`);
         resolve();
       };
       waitAudio.play().catch(() => resolve());
@@ -486,19 +481,18 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     const dispatchers = [
       { 
         voice: "Kore", 
-        intro999: "Odbierasz połączenie 999. Jesteś kobietą — dyspozytorką medyczną. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia.",
-        intro112: "Odbierasz połączenie 112. Jesteś kobietą — operatorką numeru alarmowego 112 w CPR. Zgłoś się oficjalnym powitaniem CPR i zapytaj w czym możesz pomóc."
+        intro999: "Odbierasz połączenie 999 jako dyspozytorka medyczna. Zgłoś się oficjalnym powitaniem i zapytaj o adres zdarzenia. Używaj nienagannej polszczyzny.",
+        intro112: "Odbierasz połączenie 112 jako operatorka CPR. Zgłoś się oficjalnym powitaniem. Pamiętaj, aby ZAWSZE pytać poprawnie: 'co się stało?', nigdy inaczej."
       },
       { 
         voice: "Fenrir", 
-        intro999: "Odbierasz połączenie 999. Jesteś mężczyzną — dyspozytorem medycznym. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia.",
-        intro112: "Odbierasz połączenie 112. Jesteś mężczyzną — operatorem numeru alarmowego 112 w CPR. Zgłoś się oficjalnym powitaniem CPR i zapytaj w czym możesz pomóc."
+        intro999: "Odbierasz połączenie 999 jako dyspozytor medyczny. Zgłoś się oficjalnym powitaniem i zapytaj o adres zdarzenia. Używaj nienagannej polszczyzny.",
+        intro112: "Odbierasz połączenie 112 jako operator CPR. Zgłoś się oficjalnym powitaniem. Pamiętaj, aby ZAWSZE pytać poprawnie: 'co się stało?', nigdy inaczej."
       }
     ];
 
     const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-    // 1. Bazowa konfiguracja (bez pustych tablic narzędzi)
     const setupPayload = {
       model: modelName,
       generationConfig: {
@@ -514,19 +508,21 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }
     };
 
-    // 2. Narzędzie dodajemy TYLKO dla operatora 112 (z wymaganym blokiem parameters)
+    // Wirtualny przycisk wywoływany przez operatora 112 wraz z przekazaniem zebranych danych
     if (callMode === "cpr") {
       setupPayload.tools = [
         {
           functionDeclarations: [
             {
               name: "przelacz_do_dyspozytora_999",
-              description: "Wywołaj tę funkcję BEZWZGLĘDNIE, gdy tylko dowiesz się, gdzie jest zdarzenie i co się stało. Nie pytaj o stan zdrowia. Po prostu użyj tej funkcji, aby przekazać rozmowę do medyka.",
+              description: "Wywołaj, aby przekazać rozmowę do dyspozytora medycznego. Musisz przekazać ustalony adres i rodzaj zdarzenia.",
               parameters: {
                 type: "OBJECT",
                 properties: {
-                  powod: { type: "STRING", description: "Powód przekazania rozmowy" }
-                }
+                  adres_zdarzenia: { type: "STRING", description: "Dokładny adres zdarzenia ustalony podczas wywiadu" },
+                  co_sie_stalo: { type: "STRING", description: "Krótki opis zgłoszenia (np. potrącenie, zawał, upadek)" }
+                },
+                required: ["adres_zdarzenia", "co_sie_stalo"]
               }
             }
           ]
@@ -534,8 +530,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       ];
     }
 
-    const setupMessage = { setup: setupPayload };
-    webSocket.send(JSON.stringify(setupMessage));
+    webSocket.send(JSON.stringify({ setup: setupPayload }));
 
     const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
     webSocket.send(JSON.stringify({
@@ -575,14 +570,18 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
 
-      // 2. Nasłuchiwanie na wciśnięcie przycisku przez AI (Tool Call)
+      // 2. Nasłuchiwanie na wciśnięcie przycisku przez AI (Tool Call) z pobraniem danych
       const functionCalls = data.toolCall?.functionCalls;
       if (functionCalls && callMode === "cpr" && !isTransferring) {
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferring = true;
-            console.log("Operator 112 wcisnął przycisk przełączenia. Inicjacja transferu!");
-            handleTransferTo999();
+            
+            const zebranyAdres = call.args?.adres_zdarzenia || "brak dokładnego adresu";
+            const zebranyOpis = call.args?.co_sie_stalo || "nieokreślone zdarzenie";
+            
+            console.log(`Formatka z 112 -> Adres: ${zebranyAdres} | Zdarzenie: ${zebranyOpis}`);
+            handleTransferTo999(zebranyAdres, zebranyOpis);
             return;
           }
         }
@@ -593,7 +592,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   };
 
   webSocket.onerror = (err) => {
-    console.error("WebSocket error:", err);
     showError("Błąd gniazda WebSocket.");
   };
 
@@ -607,10 +605,9 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 // ==========================================
 // 10. TRANSFER POŁĄCZENIA: CPR (112) -> 999
 // ==========================================
-async function handleTransferTo999() {
+async function handleTransferTo999(przekazanyAdres = "", przekazanyOpis = "") {
   clearTimeout(silenceTimer);
 
-  // Czekamy na dokończenie frazy operatora 112 o przełączeniu
   let waitTime = 1000;
   if (audioContext && nextStartTime > audioContext.currentTime) {
     waitTime = (nextStartTime - audioContext.currentTime) * 1000 + 500;
@@ -619,14 +616,12 @@ async function handleTransferTo999() {
 
   if (!isConnected) return;
 
-  // Zamykamy sesję CPR bez wywoływania komunikatu błędu
   if (webSocket) {
     webSocket.onclose = null;
     webSocket.close();
     webSocket = null;
   }
 
-  // 1-sekundowa pauza, a potem pojedynczy sygnał czekaj.mp3
   await sleep(1000);
   if (!isConnected) return;
 
@@ -634,9 +629,19 @@ async function handleTransferTo999() {
 
   if (!isConnected) return;
 
-  // Start właściwej sesji medycznej
+  // Start właściwej sesji medycznej z danymi z 112
   nextStartTime = 0;
-  const prompt999 = `${savedMedicalContext.systemPrompt}\n\n[KONTEKST]: Świadek został przełączony z numeru 112 od operatora CPR. Odbierz połączenie jako Dyspozytor Medyczny 999 słowami: "Dyspozytor medyczny 999, słucham, przejąłem formatkę zgłoszenia. Proszę potwierdzić adres i podać stan poszkodowanego."`;
+  const prompt999 = `${savedMedicalContext.systemPrompt}
+
+[KONTEKST SYSTEMOWY]: Świadek został przełączony z numeru 112. Operator 112 zebrał wstępny wywiad i przekazał w systemie SWD następującą formatkę:
+- ZGŁOSZONY ADRES: ${przekazanyAdres}
+- POWÓD WEZWANIA (co się stało): ${przekazanyOpis}
+
+[TWOJE ZADANIE JAKO DYSPOZYTOR 999]:
+1. Odbierz połączenie używając dokładnie tego schematu: "Dyspozytor medyczny 999, słucham. Otrzymałem z 112 zgłoszenie dotyczące: ${przekazanyOpis}, pod adresem: ${przekazanyAdres}. Czy ten adres się zgadza?"
+2. Następnie natychmiast POGŁĘB wywiad medyczny. Zapytaj o szczegóły kliniczne, których brakuje w formatce (np. czy pacjent jest przytomny, czy oddycha prawidłowo, wiek, czy mocno krwawi).
+3. Przejdź do standardowej procedury (instrukcje pierwszej pomocy, wysłanie zespołu).`;
+
   await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
 }
 
