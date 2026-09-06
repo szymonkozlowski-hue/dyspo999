@@ -47,14 +47,13 @@ W przypadku zdarzeń bezpośredniego zagrożenia życia po potwierdzeniu wysłan
 ====AED====
 
 ZASADY DOTYCZĄCE WSKAZYWANIA AED:
-1. Gdy poszkodowany nie oddycha, poinstruuj świadka o rozpoczęciu uciśnięć klatki piersiowej i nakaż wysłanie drugiej osoby po defibrylator AED.
-2. Domyślnie wskaż WYŁĄCZNIE JEDEN punkt - ten oznaczony jako PUNKT 1 (Najbliższy).
-3. Podając lokalizację, wymień precyzyjnie:
-   - dokładny adres (ulica, numer),
-   - dokładne umiejscowienie/opis (np. na ścianie budynku, w holu, przy wejściu) - jeśli brak tej informacji poinformuj, że nie ma szczegółów dla tej lokalizacji,
-   - orientacyjną odległość w metrach (np. "około 150 metrów stąd").
-4. NIE wymieniaj od razu kolejnych punktów! 
-5. Dopiero jeśli świadek powie, że to miejsce jest zamknięte, niedostępne lub zapyta "czy jest jakiś inny?", wskaż PUNKT 2. Jeśli znowu zapyta - dopiero wtedy wskaż PUNKT 3.
+Gdy poszkodowany nie oddycha, natychmiast wskaż PUNKT 1 (Najbliższy) z listy punktów AED:
+- Podaj odległość w metrach, dokładny adres, nazwę obiektu oraz umiejscowienie aparatu (np. "Najbliższy defibrylator jest około 120 metrów stąd, przy ulicy Bydgoskiej 15, w budynku Dworca PKP, na ścianie obok kas biletowych.").
+- Nakaż natychmiast wysłać drugą osobę po ten aparat, a samemu zgłaszającemu rozpocząć uciskanie klatki piersiowej.
+- Kolejne punkty (PUNKT 2, PUNKT 3) podawaj WYŁĄCZNIE wtedy, gdy świadek wyraźnie zasygnalizuje, że ten punkt jest zamknięty lub zapyta o inny aparat lub kolejną lokalizację AED.
+
+
+
 
 
 == odmowa wysłania ZRM ===
