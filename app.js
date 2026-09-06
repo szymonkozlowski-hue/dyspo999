@@ -1,11 +1,8 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API (BidiGenerateContent) + OSM AED + Function Calling
+ * Architektura: Web Audio API + Gemini Live API + OSM AED + Function Calling
  */
 
-// ==========================================
-// ZMIENNE STANU I STAŁE SYSTEMOWE
-// ==========================================
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
@@ -15,12 +12,10 @@ let audioProcessor = null;
 let wakeLock = null;
 let silenceTimer = null;
 
-// Buforowanie dźwięku i timery
 let nextStartTime = 0;
 const BUFFER_DELAY = 0.25;
 const SILENCE_TIMEOUT_MS = 6000;
 
-// Pamięć podręczna procedur i modelu na wypadek transferu z 112 do 999
 let savedMedicalContext = { 
   systemPrompt: "", 
   detectedModel: "" 
@@ -62,7 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 2. KLAWIATURA I INTERFEJS UŻYTKOWNIKA
+// 2. KLAWIATURA I INTERFEJS
 // ==========================================
 function pressKey(digit) {
   if (isConnected) return;
@@ -96,7 +91,7 @@ function showError(msg) {
 }
 
 // ==========================================
-// 3. MONITOROWANIE CISZY (SILENCE DETECTOR)
+// 3. MONITOROWANIE CISZY
 // ==========================================
 function resetSilenceTimer() {
   clearTimeout(silenceTimer);
@@ -114,9 +109,6 @@ function resetSilenceTimer() {
 
 function triggerSilencePrompt() {
   if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
-
-  console.log("Wykryto brak odpowiedzi — wymuszenie ponaglenia ze strony dyspozytora.");
-
   webSocket.send(JSON.stringify({
     clientContent: {
       turns: [
@@ -131,25 +123,19 @@ function triggerSilencePrompt() {
 }
 
 // ==========================================
-// 4. BLOKADA WYGASZANIA EKRANU (WAKE LOCK)
+// 4. WAKE LOCK
 // ==========================================
 async function requestWakeLock() {
   try {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
-      console.log("Ekran zabezpieczony przed wygaszeniem.");
     }
-  } catch (err) {
-    console.warn(`Błąd Wake Lock: ${err.name}, ${err.message}`);
-  }
+  } catch (err) {}
 }
 
 function releaseWakeLock() {
   if (wakeLock !== null) {
-    wakeLock.release().then(() => {
-      wakeLock = null;
-      console.log("Blokada wygaszania zwolniona.");
-    });
+    wakeLock.release().then(() => { wakeLock = null; });
   }
 }
 
@@ -160,32 +146,18 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 // ==========================================
-// 5. GEOLOKALIZACJA I BAZA POBIERANIA AED
+// 5. GPS I AED
 // ==========================================
 function getUserLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      console.warn("Geolokalizacja niedostępna w przeglądarce.");
       resolve(null);
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({ 
-          lat: pos.coords.latitude, 
-          lon: pos.coords.longitude, 
-          accuracy: pos.coords.accuracy 
-        });
-      },
-      (err) => {
-        resolve(null);
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 0
-      }
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      (err) => resolve(null),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   });
 }
@@ -196,12 +168,8 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
   const φ2 = lat2 * Math.PI / 180;
   const Δφ = (lat2 - lat1) * Math.PI / 180;
   const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
   return Math.round(R * c);
 }
 
@@ -212,14 +180,10 @@ async function reverseGeocode(lat, lon) {
     });
     const data = await res.json();
     const a = data.address || {};
-    
     const road = a.road || a.pedestrian || a.suburb || "";
     const house = a.house_number ? ` ${a.house_number}` : "";
     const city = a.city || a.town || a.village || "";
-    
-    if (road) {
-      return `${road}${house}${city ? `, ${city}` : ""}`;
-    }
+    if (road) return `${road}${house}${city ? `, ${city}` : ""}`;
     return data.display_name?.split(",").slice(0, 2).join(",") || "Adres z mapy";
   } catch (err) {
     return null;
@@ -228,17 +192,11 @@ async function reverseGeocode(lat, lon) {
 
 async function fetchNearbyAEDs(lat, lon) {
   const status = document.getElementById("call-status");
-  if (!lat || !lon) {
-    status.innerText = "Brak odczytu GPS.";
-    return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
-  }
-
+  if (!lat || !lon) return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
   status.innerText = "Weryfikacja bazy AED...";
-
   try {
     const res = await fetch("aed_database.json?v=1");
-    if (!res.ok) throw new Error("Brak pliku aed_database.json");
-    
+    if (!res.ok) throw new Error("Brak bazy");
     const data = await res.json();
     const elements = data.elements || [];
     const MAX_DISTANCE = 800; 
@@ -248,141 +206,83 @@ async function fetchNearbyAEDs(lat, lon) {
       .filter(el => {
         const elLat = el.lat || el.center?.lat;
         const elLon = el.lon || el.center?.lon;
-        return elLat && elLon &&
-          Math.abs(elLat - lat) < roughDelta &&
-          Math.abs(elLon - lon) < roughDelta;
+        return elLat && elLon && Math.abs(elLat - lat) < roughDelta && Math.abs(elLon - lon) < roughDelta;
       })
       .map(el => {
         const elLat = el.lat || el.center?.lat;
         const elLon = el.lon || el.center?.lon;
-        return {
-          el,
-          lat: elLat,
-          lon: elLon,
-          distance: calculateDistanceMeters(lat, lon, elLat, elLon)
-        };
+        return { el, lat: elLat, lon: elLon, distance: calculateDistanceMeters(lat, lon, elLat, elLon) };
       })
       .filter(item => item.distance <= MAX_DISTANCE)
       .sort((a, b) => a.distance - b.distance);
 
-    if (candidates.length === 0) {
-      status.innerText = `Brak AED w promieniu ${MAX_DISTANCE}m`;
-      return `W promieniu ${MAX_DISTANCE} m nie ma zarejestrowanych aparatów AED. Poinformuj zgłaszającego, że w pobliżu nie ma defibrylatora i nakaż skupić się na ciągłym uciskaniu klatki piersiowej.`;
-    }
+    if (candidates.length === 0) return `W promieniu ${MAX_DISTANCE} m nie ma zarejestrowanych aparatów AED.`;
 
     status.innerText = `Pobieranie adresu najbliższego AED...`;
-    const topCandidates = candidates.slice(0, 3);
     const resolvedPoints = [];
-
-    for (let i = 0; i < topCandidates.length; i++) {
-      const item = topCandidates[i];
+    for (let i = 0; i < candidates.slice(0, 3).length; i++) {
+      const item = candidates[i];
       const tags = item.el.tags || {};
-      const placeName = tags["name"] || tags["operator"] || "Budynek użyteczności publicznej";
-      const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie / przy wejściu";
-      
+      const placeName = tags["name"] || tags["operator"] || "Obiekt publiczny";
+      const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie";
       let address = "";
       if (tags["addr:street"]) {
         address = `ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}`.trim();
         if (tags["addr:city"]) address += `, ${tags["addr:city"]}`;
       } else {
-        const fetchedAddress = await reverseGeocode(item.lat, item.lon);
-        address = fetchedAddress ? fetchedAddress : "współrzędne terenu";
+        address = await reverseGeocode(item.lat, item.lon) || "współrzędne";
       }
-
-      resolvedPoints.push({
-        num: i + 1,
-        distance: item.distance,
-        address: address,
-        placeName: placeName,
-        placementDesc: placementDesc
-      });
+      resolvedPoints.push(`PUNKT ${i+1}: ok. ${item.distance}m | Adres: ${address} | Nazwa: ${placeName} | Miejsce: ${placementDesc}`);
     }
-
     status.innerText = `Znaleziono AED w pobliżu!`;
-    const formattedList = resolvedPoints.map(p => 
-      `PUNKT ${p.num}${p.num === 1 ? ' (Najbliższy)' : ''}: Odległość: ok. ${p.distance} m | Adres: ${p.address} | Nazwa: ${p.placeName} | Dokładne miejsce: ${p.placementDesc}`
-    ).join("\n");
-
-    return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${formattedList}`;
-
+    return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${resolvedPoints.join("\n")}`;
   } catch (e) {
-    status.innerText = "Błąd bazy lokalnej!";
-    return "Nie udało się ustalić bazy AED. Wskaż typowy punkt zastępczy.";
+    status.innerText = "Błąd bazy AED.";
+    return "Nie udało się ustalić bazy AED.";
   }
 }
 
 // ==========================================
-// 6. WERYFIKACJA MODELI GEMINI LIVE API
+// 6. MODELE I ZAPOWIEDZI
 // ==========================================
 async function checkAvailableModels() {
-  const status = document.getElementById("call-status");
-  status.innerText = "Weryfikacja modeli Live API...";
-  status.style.color = "#fbbf24";
-
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
     const data = await res.json();
-
-    if (data.error) {
-      showError("Błąd klucza Google API: " + data.error.message);
-      return null;
-    }
-
-    const bidiModels = data.models
-      ?.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
-      .map(m => m.name);
-
-    if (bidiModels && bidiModels.length > 0) {
-      return bidiModels.find(m => m.includes("flash")) || bidiModels[0];
-    } else {
-      showError("Twój klucz nie ma włączonej obsługi dwukierunkowego Live API.");
-      return null;
-    }
+    if (data.error) { showError(data.error.message); return null; }
+    const bidiModels = data.models?.filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent")).map(m => m.name);
+    return bidiModels ? (bidiModels.find(m => m.includes("flash")) || bidiModels[0]) : null;
   } catch (err) {
-    showError("Błąd sieci podczas sprawdzania modeli: " + err.message);
-    return null;
+    showError(err.message); return null;
   }
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ==========================================
-// 7. ZAPOWIEDZI IVR (CZEKAJ NA POŁĄCZENIE)
-// ==========================================
 async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "centralą 999") {
   const status = document.getElementById("call-status");
   const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
-
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
-
     status.innerText = `Łączenie z ${label}... (${i + 1}/${repeatCount})`;
     status.style.color = "#fbbf24";
-
     await new Promise((resolve) => {
       const waitAudio = new Audio(audioFile);
       waitAudio.onended = resolve;
-      waitAudio.onerror = () => {
-        resolve();
-      };
-      waitAudio.play().catch(() => resolve());
+      waitAudio.onerror = resolve;
+      waitAudio.play().catch(resolve);
     });
-
-    if (i < repeatCount - 1 && isConnected) {
-      await sleep(1000);
-    }
+    if (i < repeatCount - 1 && isConnected) await sleep(1000);
   }
 }
 
 // ==========================================
-// 8. ROZPOCZĘCIE POŁĄCZENIA (999 / 112)
+// 8. START CALL
 // ==========================================
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
-    showError("Niepoprawny numer. Wybierz 999 lub 112.");
-    return;
+    showError("Wybierz 999 lub 112."); return;
   }
-
   const is112 = (currentNumber === "112");
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
@@ -390,43 +290,27 @@ async function startCall() {
   nextStartTime = 0;
   await requestWakeLock();
 
-  const ivrPromise = is112 
-    ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)")
-    : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
-
+  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+  
   const setupPromise = (async () => {
     const coords = await getUserLocation();
-    let aedContext = "";
-    if (coords) {
-      aedContext = await fetchNearbyAEDs(coords.lat, coords.lon);
-    }
-
+    let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
     const detectedModel = await checkAvailableModels();
     if (!detectedModel) return null;
-
     const rulesRes = await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" });
     let systemPrompt = await rulesRes.text();
-
-    if (aedContext) {
-      systemPrompt += `\n\n[DANE SYSTEMOWE DYSPYZYTORA - PUNKTY AED]:\n${aedContext}\nUżyj tych konkretnych punktów, instruując świadka o wysłaniu kogoś po AED.`;
-    }
-
+    if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
     return { systemPrompt, detectedModel };
   })();
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
-
   if (!isConnected) return;
-
-  if (!setupData || !setupData.detectedModel) {
-    showError("Nie udało się połączyć ze stacją.");
-    return;
-  }
-
+  if (!setupData || !setupData.detectedModel) { showError("Błąd stacji."); return; }
+  
   savedMedicalContext = setupData;
 
   if (is112) {
-    const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR. Zgłoś się natychmiast, zbierz wstępne dane i po ich zebraniu powiedz o przełączeniu do dyspozytora medycznego.`;
+    const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR.`;
     await initLiveConnection(cprPrompt, setupData.detectedModel, "cpr");
   } else {
     await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
@@ -434,327 +318,182 @@ async function startCall() {
 }
 
 // ==========================================
-// 9. POŁĄCZENIE WEBSOCKET Z GEMINI LIVE
+// 9. WEBSOCKET
 // ==========================================
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   const status = document.getElementById("call-status");
-  status.innerText = callMode === "cpr" ? "Łączenie z operatorem 112..." : "Łączenie z dyspozytorem 999...";
+  status.innerText = callMode === "cpr" ? "Połączono z 112..." : "Połączono z 999...";
   status.style.color = "#fbbf24";
 
   if (!audioContext) {
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-    } catch (e) {
-      showError("Błąd AudioContext: " + e.message);
-      return;
-    }
+    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+    if (audioContext.state === 'suspended') await audioContext.resume();
   }
-
   if (!mediaStream) {
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          channelCount: 1,
-          sampleRate: 16000,
-          echoCancellation: true,
-          noiseSuppression: true
-        } 
-      });
-    } catch (e) {
-      showError("Brak uprawnień do mikrofonu. Zezwól na dostęp!");
-      return;
-    }
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } });
+    } catch (e) { showError("Brak mikrofonu!"); return; }
   }
 
-  const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
-  webSocket = new WebSocket(uri);
+  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
   webSocket.onopen = () => {
-    status.innerText = callMode === "cpr" 
-      ? "Połączenie 112 odebrane. Zgłasza się CPR..." 
-      : "Połączenie 999 odebrane. Dyspozytor na linii...";
+    status.innerText = callMode === "cpr" ? "CPR na linii..." : "Dyspozytor na linii...";
     status.style.color = "#4ade80";
 
     const dispatchers = [
-      { 
-        voice: "Kore", 
-        intro999: "Odbierasz połączenie 999 jako dyspozytorka medyczna. Zgłoś się oficjalnym powitaniem i zapytaj o adres zdarzenia. Używaj nienagannej polszczyzny.",
-        intro112: "Odbierasz połączenie 112 jako operatorka CPR. Zgłoś się oficjalnym powitaniem. Pamiętaj, aby ZAWSZE pytać poprawnie: 'co się stało?', nigdy inaczej."
-      },
-      { 
-        voice: "Fenrir", 
-        intro999: "Odbierasz połączenie 999 jako dyspozytor medyczny. Zgłoś się oficjalnym powitaniem i zapytaj o adres zdarzenia. Używaj nienagannej polszczyzny.",
-        intro112: "Odbierasz połączenie 112 jako operator CPR. Zgłoś się oficjalnym powitaniem. Pamiętaj, aby ZAWSZE pytać poprawnie: 'co się stało?', nigdy inaczej."
-      }
+      { voice: "Kore", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
+      { voice: "Fenrir", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
     ];
+    const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-    const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
-
+    // DODANY TEXT ABY DZIAŁAŁY NARZĘDZIA (BŁĄD 1007 ZNIKNIE)
     const setupPayload = {
       model: modelName,
       generationConfig: {
-        responseModalities: ["AUDIO", "TEXT"], // <-- TUTAJ MUSI BYĆ TEXT, ABY PRZYCISK ZADZIAŁAŁ
-        speechConfig: {
-            prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
-          }
-        }
+        responseModalities: ["AUDIO", "TEXT"], 
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
       },
-      systemInstruction: {
-        parts: [{ text: instructions }]
-      }
+      systemInstruction: { parts: [{ text: instructions }] }
     };
 
-    // Wirtualny przycisk wywoływany przez operatora 112 wraz z przekazaniem zebranych danych
     if (callMode === "cpr") {
-      setupPayload.tools = [
-        {
-          functionDeclarations: [
-            {
-              name: "przelacz_do_dyspozytora_999",
-              description: "Wywołaj, aby przekazać rozmowę do dyspozytora medycznego. Musisz przekazać ustalony adres i rodzaj zdarzenia.",
-              parameters: {
-                type: "OBJECT",
-                properties: {
-                  adres_zdarzenia: { type: "STRING", description: "Dokładny adres zdarzenia ustalony podczas wywiadu" },
-                  co_sie_stalo: { type: "STRING", description: "Krótki opis zgłoszenia (np. potrącenie, zawał, upadek)" }
-                },
-                required: ["adres_zdarzenia", "co_sie_stalo"]
-              }
-            }
-          ]
-        }
-      ];
+      setupPayload.tools = [{
+        functionDeclarations: [{
+          name: "przelacz_do_dyspozytora_999",
+          description: "Przekaż rozmowę do dyspozytora. Wymaga adresu i opisu zdarzenia.",
+          parameters: {
+            type: "OBJECT",
+            properties: {
+              adres_zdarzenia: { type: "STRING" },
+              co_sie_stalo: { type: "STRING" }
+            },
+            required: ["adres_zdarzenia", "co_sie_stalo"]
+          }
+        }]
+      }];
     }
 
     webSocket.send(JSON.stringify({ setup: setupPayload }));
-
-    const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
-    webSocket.send(JSON.stringify({
-      clientContent: {
-        turns: [
-          {
-            role: "user",
-            parts: [{ text: initialPrompt }]
-          }
-        ],
-        turnComplete: true
-      }
-    }));
-
+    const initialPrompt = callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999;
+    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: initialPrompt }] }], turnComplete: true } }));
+    
     startAudioStreaming();
     resetSilenceTimer();
   };
 
   let isTransferring = false;
-
   webSocket.onmessage = async (event) => {
     try {
-      let data;
-      if (event.data instanceof Blob) {
-        data = JSON.parse(await event.data.text());
-      } else {
-        data = JSON.parse(event.data);
-      }
-
-      // 1. Odtwarzanie głosu z głośnika
+      let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
-          if (part.inlineData?.data) {
-            playAudioChunk(part.inlineData.data);
-          }
+          if (part.inlineData?.data) playAudioChunk(part.inlineData.data);
         }
         resetSilenceTimer();
       }
-
-      // 2. Nasłuchiwanie na wciśnięcie przycisku przez AI (Tool Call) z pobraniem danych
+      
       const functionCalls = data.toolCall?.functionCalls;
       if (functionCalls && callMode === "cpr" && !isTransferring) {
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferring = true;
-            
-            const zebranyAdres = call.args?.adres_zdarzenia || "brak dokładnego adresu";
-            const zebranyOpis = call.args?.co_sie_stalo || "nieokreślone zdarzenie";
-            
-            console.log(`Formatka z 112 -> Adres: ${zebranyAdres} | Zdarzenie: ${zebranyOpis}`);
-            handleTransferTo999(zebranyAdres, zebranyOpis);
+            handleTransferTo999(call.args?.adres_zdarzenia || "brak", call.args?.co_sie_stalo || "nieznane zdarzenie");
             return;
           }
         }
       }
-    } catch (err) {
-      console.error("Błąd parsowania pakietu WebSocket:", err);
-    }
+    } catch (err) {}
   };
-
-  webSocket.onerror = (err) => {
-    showError("Błąd gniazda WebSocket.");
-  };
-
-  webSocket.onclose = (event) => {
-    if (isConnected && callMode !== "transferring") {
-      showError(`Rozłączono (Kod: ${event.code})`);
-    }
-  };
+  webSocket.onclose = (e) => { if (isConnected && callMode !== "transferring") showError(`Rozłączono (${e.code})`); };
 }
 
 // ==========================================
-// 10. TRANSFER POŁĄCZENIA: CPR (112) -> 999
+// 10. TRANSFER CPR -> 999
 // ==========================================
-async function handleTransferTo999(przekazanyAdres = "", przekazanyOpis = "") {
+async function handleTransferTo999(adres, opis) {
   clearTimeout(silenceTimer);
-
-  let waitTime = 1000;
-  if (audioContext && nextStartTime > audioContext.currentTime) {
-    waitTime = (nextStartTime - audioContext.currentTime) * 1000 + 500;
-  }
-  await sleep(waitTime);
-
+  let wait = audioContext && nextStartTime > audioContext.currentTime ? (nextStartTime - audioContext.currentTime)*1000 + 500 : 1000;
+  await sleep(wait);
   if (!isConnected) return;
 
-  if (webSocket) {
-    webSocket.onclose = null;
-    webSocket.close();
-    webSocket = null;
-  }
-
+  if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
   await sleep(1000);
   if (!isConnected) return;
 
-  await playWaitMessageSequence("czekaj.mp3", 1, 1, "Dyspozytorem Medycznym 999");
-
+  await playWaitMessageSequence("czekaj.mp3", 1, 1, "999");
   if (!isConnected) return;
 
-  // Start właściwej sesji medycznej z danymi z 112
   nextStartTime = 0;
   const prompt999 = `${savedMedicalContext.systemPrompt}
-
-[KONTEKST SYSTEMOWY]: Świadek został przełączony z numeru 112. Operator 112 zebrał wstępny wywiad i przekazał w systemie SWD następującą formatkę:
-- ZGŁOSZONY ADRES: ${przekazanyAdres}
-- POWÓD WEZWANIA (co się stało): ${przekazanyOpis}
-
-[TWOJE ZADANIE JAKO DYSPOZYTOR 999]:
-1. Odbierz połączenie używając dokładnie tego schematu: "Dyspozytor medyczny 999, słucham. Otrzymałem z 112 zgłoszenie dotyczące: ${przekazanyOpis}, pod adresem: ${przekazanyAdres}. Czy ten adres się zgadza?"
-2. Następnie natychmiast POGŁĘB wywiad medyczny. Zapytaj o szczegóły kliniczne, których brakuje w formatce (np. czy pacjent jest przytomny, czy oddycha prawidłowo, wiek, czy mocno krwawi).
-3. Przejdź do standardowej procedury (instrukcje pierwszej pomocy, wysłanie zespołu).`;
+[KONTEKST]: Przełączono z 112. Operator przekazał formatkę: ADRES: ${adres}, ZDARZENIE: ${opis}.
+[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, adres: ${adres}. Czy adres się zgadza?" Po potwierdzeniu pogłęb wywiad medyczny.`;
 
   await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
 }
 
 // ==========================================
-// 11. STRUMIENIOWANIE AUDIO Z MIKROFONU
+// 11. AUDIO OUT
 // ==========================================
 function startAudioStreaming() {
-  if (audioProcessor) {
-    audioProcessor.disconnect();
-    audioProcessor = null;
-  }
-
-  const inputAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-  const source = inputAudioCtx.createMediaStreamSource(mediaStream);
-  
-  audioProcessor = inputAudioCtx.createScriptProcessor(4096, 1, 1);
-  source.connect(audioProcessor);
-  audioProcessor.connect(inputAudioCtx.destination);
+  if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  const src = ctx.createMediaStreamSource(mediaStream);
+  audioProcessor = ctx.createScriptProcessor(4096, 1, 1);
+  src.connect(audioProcessor);
+  audioProcessor.connect(ctx.destination);
 
   audioProcessor.onaudioprocess = (e) => {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
-    
-    const inputData = e.inputBuffer.getChannelData(0);
-    
+    const input = e.inputBuffer.getChannelData(0);
     let sum = 0;
-    for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
-    const rms = Math.sqrt(sum / inputData.length);
-    if (rms > 0.05) {
-      resetSilenceTimer();
-    }
-
-    const pcm16 = new Int16Array(inputData.length);
-    for (let i = 0; i < inputData.length; i++) {
-      pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7fff;
-    }
+    for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
+    if (Math.sqrt(sum/input.length) > 0.05) resetSilenceTimer();
     
+    const pcm16 = new Int16Array(input.length);
+    for (let i=0; i<input.length; i++) pcm16[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
     const bytes = new Uint8Array(pcm16.buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64Audio = btoa(binary);
-
-    webSocket.send(JSON.stringify({
-      realtimeInput: {
-        mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Audio }]
-      }
-    }));
+    let bin = "";
+    for (let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    
+    webSocket.send(JSON.stringify({ realtimeInput: { mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(bin) }] } }));
   };
 }
 
 // ==========================================
-// 12. ODTWARZANIE MOWY DYSPOZYTORA (BUFOR)
+// 12. AUDIO IN
 // ==========================================
-function playAudioChunk(base64Data) {
+function playAudioChunk(b64) {
   if (!audioContext) return;
-
-  const binaryString = atob(base64Data);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-
-  const pcm16 = new Int16Array(bytes.buffer);
-  const float32 = new Float32Array(pcm16.length);
-  for (let i = 0; i < pcm16.length; i++) {
-    float32[i] = pcm16[i] / 32768.0;
-  }
-
-  const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
-  audioBuffer.copyToChannel(float32, 0);
-
-  const source = audioContext.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(audioContext.destination);
-
-  const currentTime = audioContext.currentTime;
-
-  if (nextStartTime <= currentTime) {
-    nextStartTime = currentTime + BUFFER_DELAY;
-  }
-
-  source.start(nextStartTime);
-  nextStartTime += audioBuffer.duration;
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const float32 = new Float32Array(new Int16Array(bytes.buffer).length);
+  for (let i=0; i<float32.length; i++) float32[i] = new Int16Array(bytes.buffer)[i] / 32768.0;
+  
+  const buf = audioContext.createBuffer(1, float32.length, 24000);
+  buf.copyToChannel(float32, 0);
+  const src = audioContext.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioContext.destination);
+  
+  if (nextStartTime <= audioContext.currentTime) nextStartTime = audioContext.currentTime + BUFFER_DELAY;
+  src.start(nextStartTime);
+  nextStartTime += buf.duration;
 }
 
 // ==========================================
-// 13. ZAKOŃCZENIE POŁĄCZENIA
+// 13. KONIEC
 // ==========================================
 function endCall() {
   clearTimeout(silenceTimer);
-  isConnected = false;
-  currentNumber = "";
-  nextStartTime = 0;
+  isConnected = false; currentNumber = ""; nextStartTime = 0;
   updateDisplay();
-
-  if (webSocket) {
-    webSocket.onclose = null;
-    webSocket.close();
-    webSocket = null;
-  }
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(t => t.stop());
-    mediaStream = null;
-  }
-  if (audioProcessor) {
-    audioProcessor.disconnect();
-    audioProcessor = null;
-  }
-
-  const status = document.getElementById("call-status");
-  status.innerText = "Połączenie zakończone.";
-  status.style.color = "#9ca3af";
-  
+  if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+  if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
+  document.getElementById("call-status").innerText = "Zakończono.";
+  document.getElementById("call-status").style.color = "#9ca3af";
   document.getElementById("call-btn").style.display = "flex";
   document.getElementById("hangup-btn").style.display = "none";
   releaseWakeLock();
