@@ -101,58 +101,124 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 
-async function fetchNearbyAEDs(lat, lon) {
-  if (!lat || !lon) return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
+// Pomocnicza funkcja: Odwrócone geokodowanie (OSM Nominatim)
+async function reverseGeocode(lat, lon) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`, {
+      headers: { "Accept-Language": "pl" }
+    });
+    const data = await res.json();
+    const a = data.address || {};
+    
+    const road = a.road || a.pedestrian || a.suburb || "";
+    const house = a.house_number ? ` ${a.house_number}` : "";
+    const city = a.city || a.town || a.village || "";
+    
+    if (road) {
+      return `${road}${house}${city ? `, ${city}` : ""}`;
+    }
+    return data.display_name?.split(",").slice(0, 2).join(",") || "Adres wg mapy";
+  } catch (err) {
+    console.warn("Błąd Reverse Geocoding:", err);
+    return null;
+  }
+}
 
-  // Zapytanie do OpenStreetMap w promieniu 2.5 km z pełnymi tagami
-  const overpassQuery = `[out:json][timeout:5];
-    node["emergency"="defibrillator"](around:2500,${lat},${lon});
-    out body 10;`;
+async function fetchNearbyAEDs(lat, lon) {
+  const status = document.getElementById("call-status");
+  if (!lat || !lon) {
+    status.innerText = "Brak odczytu GPS.";
+    return "Brak odczytu GPS zgłaszającego. Wskaż typowy punkt w pobliżu.";
+  }
+
+  status.innerText = "Weryfikacja bazy AED...";
 
   try {
-    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+    const res = await fetch("aed_database.json?v=1");
+    if (!res.ok) throw new Error("Brak pliku aed_database.json");
+    
     const data = await res.json();
+    const elements = data.elements || [];
 
-    if (!data.elements || data.elements.length === 0) {
-      return "W promieniu 2.5 km w rejestrze OpenStreetMap nie ma zarejestrowanych aparatów AED.";
+    // Maksymalny zasięg pieszego biegu po aparat (np. 800 metrów)
+    const MAX_DISTANCE = 800;
+
+    // Szybki wstępny filtr współrzędnych (delta ok. 1.2 km)
+    const roughDelta = 0.012;
+    const candidates = elements
+      .filter(el => {
+        const elLat = el.lat || el.center?.lat;
+        const elLon = el.lon || el.center?.lon;
+        return elLat && elLon &&
+          Math.abs(elLat - lat) < roughDelta &&
+          Math.abs(elLon - lon) < roughDelta;
+      })
+      .map(el => {
+        const elLat = el.lat || el.center?.lat;
+        const elLon = el.lon || el.center?.lon;
+        return {
+          el,
+          lat: elLat,
+          lon: elLon,
+          distance: calculateDistanceMeters(lat, lon, elLat, elLon)
+        };
+      })
+      .filter(item => item.distance <= MAX_DISTANCE)
+      .sort((a, b) => a.distance - b.distance);
+
+    if (candidates.length === 0) {
+      status.innerText = `Brak AED w promieniu ${MAX_DISTANCE}m`;
+      return `W promieniu ${MAX_DISTANCE} m nie ma zarejestrowanych aparatów AED. Poinformuj zgłaszającego, że w pobliżu nie ma defibrylatora i nakaż skupić się na ciągłym uciskaniu klatki piersiowej.`;
     }
 
-    // Wyciągnięcie i posortowanie wg odległości
-    const sortedAeds = data.elements.map(el => {
-      const tags = el.tags || {};
-      const distance = calculateDistanceMeters(lat, lon, el.lat, el.lon);
+    status.innerText = `Pobieranie adresu najbliższego AED...`;
 
-  // Budowanie adresu z pełniejszą obsługą tagów OSM
-      let addressParts = [];
+    // Przetwarzamy do 3 najbliższych punktów
+    const topCandidates = candidates.slice(0, 3);
+    const resolvedPoints = [];
+
+    for (let i = 0; i < topCandidates.length; i++) {
+      const item = topCandidates[i];
+      const tags = item.el.tags || {};
+
+      // 1. Nazwa obiektu
+      const placeName = tags["name"] || tags["operator"] || "Budynek użyteczności publicznej / obiekt komercyjny";
+
+      // 2. Opis umiejscowienia
+      const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie / przy wejściu głównym";
+
+      // 3. Adres z tagów OSM lub z Reverse Geocoding
+      let address = "";
       if (tags["addr:street"]) {
-        addressParts.push(`ul. ${tags["addr:street"]}`);
-        if (tags["addr:housenumber"]) addressParts.push(tags["addr:housenumber"]);
-      } else if (tags["addr:place"]) {
-        addressParts.push(tags["addr:place"]);
+        address = `ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}`.trim();
+        if (tags["addr:city"]) address += `, ${tags["addr:city"]}`;
+      } else {
+        // Jeśli nie ma adresu w tagach, dociągamy go przez Reverse Geocoding
+        const fetchedAddress = await reverseGeocode(item.lat, item.lon);
+        address = fetchedAddress ? fetchedAddress : "współrzędne obiektu w terenie";
       }
 
-      if (tags["addr:city"]) addressParts.push(tags["addr:city"]);
+      resolvedPoints.push({
+        num: i + 1,
+        distance: item.distance,
+        address: address,
+        placeName: placeName,
+        placementDesc: placementDesc
+      });
+    }
 
-      // Jeśli węzeł w bazie nie ma wpisanej ulicy, bierzemy nazwę punktu / instytucji
-      const locationName = tags["name"] || tags["operator"] || "";
-      const fullAddress = addressParts.length > 0 
-        ? addressParts.join(" ") 
-        : (locationName ? `${locationName} (brak numeru ulicy w bazie)` : "Punkt w terenie (wg współrzędnych)");
+    status.innerText = `Znaleziono AED w pobliżu!`;
 
-      // Budowanie opisu miejsca montażu
-      const desc = tags["defibrillator:location"] || tags["description"] || tags["access"] || "Dostępny publicznie";
-      return {
-        distance,
-        text: `Odległość: ok. ${distance} m | Adres: ${fullAddress} | Umiejscowienie/Opis: ${desc}`
-      };
-    }).sort((a, b) => a.distance - b.distance);
+    const formattedList = resolvedPoints.map(p => 
+      `PUNKT ${p.num}${p.num === 1 ? ' (Najbliższy)' : ''}: Odległość: ok. ${p.distance} m | Adres: ${p.address} | Nazwa obiektu: ${p.placeName} | Dokładne umiejscowienie aparatu: ${p.placementDesc}`
+    ).join("\n");
 
-    const formattedList = sortedAeds.map((aed, idx) => `PUNKT ${idx + 1} (Najbliższy): ${aed.text}`).join("\n");
+    return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${formattedList}`;
 
-    return `ZAREJESTROWANE APARATY AED W OKOLICY (posortowane od najbliższego):\n${formattedList}`;
   } catch (e) {
-    console.warn("Błąd bazy OSM:", e);
-    return "Nie udało się pobrać bazy OpenStreetMap. Wskaż realistyczny punkt w pobliżu.";
+    console.error("Błąd bazy AED:", e);
+    status.innerText = "Błąd bazy lokalnej!";
+    return "Nie udało się ustalić bazy AED. Wskaż typowy punkt zastępczy.";
   }
 }
 
