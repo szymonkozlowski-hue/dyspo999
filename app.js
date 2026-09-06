@@ -347,11 +347,11 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     ];
     const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-    // DODANY TEXT ABY DZIAŁAŁY NARZĘDZIA (BŁĄD 1007 ZNIKNIE)
+  // POPRAWNA KONFIGURACJA (Tylko AUDIO, dodane wymagane opisy dla schematu JSON)
     const setupPayload = {
       model: modelName,
       generationConfig: {
-        responseModalities: ["AUDIO", "TEXT"], 
+        responseModalities: ["AUDIO"], 
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
       },
       systemInstruction: { parts: [{ text: instructions }] }
@@ -361,12 +361,18 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       setupPayload.tools = [{
         functionDeclarations: [{
           name: "przelacz_do_dyspozytora_999",
-          description: "Przekaż rozmowę do dyspozytora. Wymaga adresu i opisu zdarzenia.",
+          description: "Wywołaj to narzędzie, aby przekazać rozmowę do dyspozytora. Musisz podać zebrany adres i to, co się stało.",
           parameters: {
             type: "OBJECT",
             properties: {
-              adres_zdarzenia: { type: "STRING" },
-              co_sie_stalo: { type: "STRING" }
+              adres_zdarzenia: { 
+                type: "STRING", 
+                description: "Dokładny adres zdarzenia ustalony podczas wywiadu" 
+              },
+              co_sie_stalo: { 
+                type: "STRING", 
+                description: "Krótki opis zdarzenia, np. potrącenie, wypadek, zasłabnięcie" 
+              }
             },
             required: ["adres_zdarzenia", "co_sie_stalo"]
           }
