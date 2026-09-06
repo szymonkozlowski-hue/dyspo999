@@ -503,11 +503,11 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
     const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-    const setupMessage = {
+   const setupMessage = {
       setup: {
         model: modelName,
         generationConfig: {
-          responseModalities: ["AUDIO"],
+          responseModalities: ["AUDIO", "TEXT"], // AUDIO do mowy, TEXT do niezawodnego wykrywania słów kluczowych
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
@@ -557,15 +557,20 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
             playAudioChunk(part.inlineData.data);
           }
 
-          // Sprawdzamy czy w transkrypcji pojawiła się informacja o przełączeniu
-          const textChunk = part.text || "";
+         // Wykrywanie momentu przekazania rozmowy przez CPR do 999
+          const textChunk = (part.text || "").toLowerCase();
           if (
             callMode === "cpr" && 
             !isTransferring && 
-            (textChunk.includes("PRZEŁĄCZ_DO_999") || textChunk.toLowerCase().includes("przełączam"))
+            (
+              textChunk.includes("przełącz") || 
+              textChunk.includes("przekazuj") || 
+              textChunk.includes("999") ||
+              textChunk.includes("formatk")
+            )
           ) {
             isTransferring = true;
-            console.log("Operator CPR zainicjował procedurę transferu do 999.");
+            console.log("Wykryto zakończenie wywiadu CPR w tekście. Uruchamiam transfer do 999...");
             handleTransferTo999();
             return;
           }
