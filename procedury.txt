@@ -63,4 +63,1583 @@ Jeśli rozmówca zachowuje się niekulturalnie lub zaczyna używać słów uznan
 ====
 
 
+====================================
+PROCEDURY OFICJALNE
+
+Algorytm zbierania wywiadu medycznego przez dyspozytora medycznego 
+Spis procedur: 
+1. Procedura ogólna 
+
+2. Alergia 
+
+3. Ból brzucha 
+
+4. Ból głowy 
+
+5. Ból w klatce piersiowej 
+
+6. Ból kręgosłupa, pleców 
+
+7. Ciąża, poród, poronienie 
+
+8. Cukrzyca 
+
+9. Drgawki 
+
+10. Duszność 
+
+11. Krwotok, krwawienie 
+
+12. Leży 
+
+13. Nieprzytomny 
+
+14. Oparzenie 
+
+15. Wyziębienie, hipotermia 
+
+16. Paraliż, bełkotliwa mowa 
+
+17. Porażenie prądem, piorunem 
+
+18. Powieszenie, zadzierzgnięcie 
+
+19. Problemy kardiologiczne 
+
+20. Urazy, obrażenia 
+
+21. Wysokie ciśnienie tętnicze 
+
+22. Tonięcie 
+
+23. Wypadek komunikacyjny 
+
+24. Zaburzenia psychiczne 
+
+25. Nagłe zatrzymanie krążenia 
+
+26. Zachłyśnięcie, ciało obce w drogach oddechowych 
+
+27. Zatrucie 
+
+28. Zasłabnięcie 
+
+29. Złe samopoczucie 
+
+30. Pacjent pediatryczny, dziecko 
+
+31. Wypadek nurkowy, dekompresyjny 
+
+32. Odmowa przyjęcia zgłoszenia 
+
+
+1. PROCEDURA OGÓLNA 
+1) przedstaw się: „Ratownictwo Medyczne, dyspozytor 2137, proszę podać dokładny adres zdarzenia”; 
+2) uzyskaj dane adresowe: 
+
+a) w przypadku zgłoszenia z 999: 
+Poproś o podanie adresu miejsca zdarzenia (województwo, powiat, gmina, miejscowość, ulica, numer budynku, numer mieszkania, ewentualnie charakterystyczne punkty/obiekty lokalizacyjne, współrzędne geograficzne), 
+b)w przypadku połączenia z 112: Potwierdź/Zweryfikuj adres miejsca zdarzenia zawarty w formatce przesłanej przez operatora numerów 
+alarmowych; 
+3) potwierdź numer telefonu, zktórego dzwoni osoba wzywająca; 
+4) ustal co się stało? czy w miejscu zdarzenia jest bezpiecznie? kogo dotyczy zgłoszenie (dorosły/dziecko)? ile jest osób poszkodowanych?; 
+5) określ stan osoby, której wezwanie dotyczy: 
+a) czy jest przytomna?, 
+
+b) czy się porusza? czy otwiera oczy? czy nawiązuje kontakt słowny? czy reaguje na ból?, 
+
+c)czy oddycha?, 
+
+d) czy oddycha inaczej niż zwykle? czy unosi się klatka piersiowa?. 
+
+
+Jeśli NIEPRZYTOMNY I NIE ODDYCHA: 
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NAGŁE ZATRZYMANIE KRĄŻENIA i prowadź dalszą rozmowę. 
+Jeśli NIEPRZYTOMNY I ODDYCHA: 
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NIEPRZYTOMNY i prowadź dalszą rozmowę. 
+Jeśli PRZYTOMNY –WYBIERZ WŁAŚCIWĄ PROCEDURĘ. 
+
+
+2. ALERGIA 
+1) postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2) jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+ czy ma trudności w oddychaniu? od kiedy?, 
+
+b)
+ czy ma trudności wmówieniu? od kiedy?, 
+
+c)
+ czy ma trudności wpołykaniu? od kiedy?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d)
+ czy ma obrzęki? gdzie zlokalizowane? – od kiedy?, 
+
+e)
+ czy jest na coś uczulony (np. leki, kosmetyki, pokarmy, owady)? jeśli tak to czy ma adrenalinę?, 
+
+f) 
+czy występują dodatkowe objawy skórne np. wybroczyny, wysypka? – od kiedy? (ewentualnie dodatkowe pytania doprecyzowujące), 
+
+g)
+na co choruje? –od kiedy? czy przyjął nowe leki? jeśli tak to jakie?, 
+
+h)
+ czy zastosowałleki przed wezwaniem pomocy? jeśli tak to jakie?, 
+
+i)
+ czy występują inne objawy niepokojące osobę wzywającą (np. blady, spocony, szary, siny)?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak stanu nagłego zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)usunięciu alergenu o ile to możliwe; 
+2) podaniu adrenaliny domięśniowo, najlepiej w zewnętrzną część uda, w przypadku podejrzenia wstrząsu 
+anafilaktycznego; 
+3)pozycji leżącej lub półsiedzącej(w przypadku trudności z oddychaniem). 
+3. BÓLBRZUCHA 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGLOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+gdzie boli?, 
+
+b) 
+od kiedy boli? – w jakich okolicznościach pojawił się ból? (np. uraz, wysiłek, posiłek, alkohol). Jeśli pacjentem jest kobieta – ostatnia menstruacja, rozważ ciążę, poród, gwałt. 
+
+c)
+ czy ból promieniuje?jeżeli tak, to gdzie?, 
+
+d)
+czy wymiotuje? –jeśli tak, od kiedy i ile razy? jaką treścią (np. treścią fusowatą, kałową, krwią)?, 
+
+e)
+kolor, wilgotność, wygląd powłok skórnych – np. spocony, blady, wybroczyny, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+f) czy wypróżnia się? – jeśli nie, kiedy było ostatnie wypróżnienie (określ ilość, rodzaj, występowanie krwi, 
+czarny/smolisty stolec)?, 
+g)
+ czy odchodzą gazy? –jeślinie, od kiedy?, 
+
+h)
+ czy oddaje mocz? czy są problemy z oddawaniem moczu (dolegliwości, krew w moczu)?, 
+
+i)
+ czy przyjmuje płyny?, 
+
+j)
+ czy była mierzona temperatura? jeśli tak, to jaka jest jej wartość?, 
+
+k)
+czy w ostatnim czasie przebywał w krajach tropikalnych?, 
+
+l)
+ czy przyjmował leki p/bólowe lub rozkurczowe? – jakie i kiedy? czy nastąpiła poprawa?, 
+
+m)
+na co choruje? –od kiedy? czy przyjmuje leki? czy był operowany w obrębie jamy brzusznej?, 
+
+n)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: ”Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) zawale mięśnia sercowego – maska brzuszna; 
+2) tętniaku aorty brzusznej; 
+3) ciąży pozamacicznej; 
+4)chorobie wrzodowej; 
+5)kamicy (pęcherzyka żółciowego, układu moczowego); 
+6)chorobach trzustki; 
+7)przepuklinie. 
+
+4. BÓL GŁOWY 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) od kiedy boli? – w jakich okolicznościach pojawił się ból (np. uraz, wysiłek, utrata przytomności, zasłabnięcie), 
+b)jakijest charakter bólu –np. ucisk, pulsujący, promieniujący, punktowy, rozlany?, 
+c)
+ nasilenie bólu – w skali 0 – 10, 
+
+d)czyma trudnościw oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+
+e)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+f)
+ czy występują zawroty głowy, zaburzenia równowagi?, 
+
+g)
+ czy występują drętwienia? – lokalizacja?, 
+
+h)
+czy wymiotuje? –jeśli tak, od kiedy i ile razy?, jaką treścią?, 
+
+i)
+czy w ostatnim czasie doszło do urazu? – kiedy? w jakich okolicznościach?, 
+
+j)
+ czy występowały bóle głowy wcześniej? –jeśli tak, to czy obecnie jest inny lub podobny?, 
+
+k)
+ czy przyjmował leki p/bólowe, p/zakrzepowe – jakie i kiedy?, 
+
+l)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? czy w ostatnim czasie przebył infekcję?, 
+
+m)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: ”Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+PAMIĘTAJ O: 
+1) tętniaku tętnic mózgowych; 
+2)krwiaku przewlekłym; 
+3) zatruciu tlenkiem węgla; 
+4) zapaleniu opon mózgowo-rdzeniowych; 
+5)nadciśnieniu tętniczym. 
+
+
+5. BÓL W KLATCE PIERSIOWEJ 
+1)postępuj zgodnie z OGÓLNĄPROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)określ ból w klatce piersiowej: -lokalizacja bólu, -czas trwania bólu, -jakijest charakter bólu ijego nasilenie?(np. piekący, gniotący, rozrywający, kłujący), -czy ból promieniuje? jeśli tak to gdzie?, -czy ból nasila się przy kaszlu, wysiłku fizycznym, zmianie pozycji ciała?, -czy ból wystąpił pierwszy raz?, -czy ból wystąpił po urazie?, -czy bólowi towarzyszą inne objawy?(np. duszność, poty, zasinienie, bladość twarzy lub ust, uczucie 
+kołatania serca, nudności, wymioty)?, -czy ból był poprzedzony zasłabnięciem lub omdleniem?, 
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+b)
+ czy pacjent przebył: -zawał mięśnia sercowego (rok)?, -operacje kardiochirurgiczne (np. PCI, wady zastawek, tętniak, by-passy)?, -wszczepienie rozrusznika lub kardiowertera?, 
+
+c)
+na co choruje? od kiedy? czy przyjmuje leki i jakie? w zakresie układu krążenia: -choroba wieńcowa?, -choroba nadciśnieniowa?, -zaburzenia rytmu?, -cukrzyca?, -inne. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) umożliwieniu odstępu do świeżego powietrza (np. otworzyć okno, wynieść z tłumu); 
+2)ułożeniu pacjenta w wygodnej dla niego pozycji –najlepiej półsiedzącej; 
+3)podaniu pacjentowi jednej tabletki polopiryny lub aspiryny do rozgryzienia; 
+4)nie podawaniu żadnych innych leków. 
+6. BÓLKRĘGOSŁUPA, PLECÓW 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)gdzie boli?, 
+b)jakijest charakter bólu –np. ucisk, pulsujący, punktowy, rozlany, stały, przemijający?, 
+c)
+ czy ból promieniuje? –jeśli tak to gdzie? (pachwina, krocze, jądra, ramiona, szyja, klatka piersiowa), 
+
+d)
+ nasilenie bólu – w skali 0 – 10, 
+
+e)
+od kiedy boli?, 
+
+f)
+w jakich okolicznościach pojawiłsię ból(np. uraz, wysiłek, posiłek, alkohol)?, 
+
+g)
+ czy występuje drętwienie kończyn? czy może poruszać kończynami? czy czucie jest zachowane? czy oddał 
+
+
+bezwiednie stolec, mocz?, 
+h)
+ czy oddaje mocz? czy są problemy zoddawaniem moczu (dolegliwości, krew w moczu)?, 
+
+i)
+ czy występują zaparcia iwzdęcia?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) zawale mięśnia sercowego; 
+2) tętniaku aorty; 
+3)kamicy nerkowej; 
+4) ciąży. 
+
+7. CIĄŻA, PORÓD, PORONIENIE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNA – zbierz wywiad medyczny: 
+a) która ciąża? który tydzień? który poród? czy ciąża jest pojedyncza/mnoga, zagrożona? czy występowały komplikacje w przeszłości wprzebiegu ciąży i porodu?, 
+Jeśli doszło do urodzenia określ stan noworodka, a w przypadku konieczności rozważ procedurę pediatryczną, 
+dziecko. 
+b)
+ czy występują skurcze/bóle? – co ile minut?, 
+
+c)
+ czy są zachowane wodypłodowe? – jeśli nie, kiedy odeszły?, 
+
+d)
+ czy czuje ruchy płodu? –jeślinie, od kiedy?, 
+
+e)
+ czy występuje krwawienie/krwotok – od kiedy?, 
+
+
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+f)
+czy w ostatnim czasie doszło do urazu? – kiedy? w jakich okolicznościach?, 
+
+g)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+h)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+
+PAMIĘTAJ O: 
+1)rzucawce; 
+2)chorobach tarczycy; 
+3) ewentualnej potrzebie zadysponowania dodatkowego zespołu ratownictwa medycznego dla noworodka. 
+
+
+8. CUKRZYCA 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2) jeśli NIEPRZYTOMNY– W przypadku wskazań rozważ podanie pacjentowi glukagonu. PRZEJDŹ DO PROCEDURY NIEPRZYTOMNY; 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)czy oznaczono poziom glukozy? –jeśli tak, jakijest wynik pomiaru oraz kiedydokonano pomiaru?, 
+W przypadku wskazań, rozważ podanie pacjentowi glukagonu/cukru w dostępnej postaci z zachowaniem zasad bezpieczeństwa pacjenta. 
+b)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+c)
+kolor, wilgotność, wygląd powłok skórnych – np. spocony, blady, wybroczyny, 
+
+d)czyma trudnościw oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+
+e)
+ czy przyjmuje insulinę?, 
+
+f) 
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – (np. astma, POCHP, infekcja dróg oddechowych, alergia – w zależności od uzyskanych informacji rozważ zmianę PROCEDURY), 
+
+g)
+ czy występują inne objawy lub widoczne obrażenia niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)udarze mózgu; 
+2) zachłyśnięciu; 
+3)stanie po drgawkach; 
+4) zatruciu związkami chemicznymi; 
+5)zaburzeniach psychicznych. 
+
+9. DRGAWKI 
+1)czyokolicznościzdarzenia mogą miećwpływnastan pacjentai bezpieczeństwowzywającego? –np.porażenie prądem, zatrucie związkami chemicznymi, wypadek komunikacyjny; 
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA Czy jest w trakcie drgawek? jak długo trwają drgawki? który to epizod w dniu dzisiejszym?; 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)czyma trudnościw oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+b)
+ czy oddał bezwiednie stolec, mocz?, 
+
+c)
+ czy choruje na epilepsję? czy wcześniej byłjuż incydent drgawek? czy przyjmuje z tego powodu leki?, 
+
+d)
+czy jest w ciąży?, 
+
+e) 
+czy pamięta okoliczności zdarzenia?, 
+
+f)
+ czy podczas zdarzenia doszło do urazu? jeśli tak, określlokalizację obrażeń?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+g)
+czy w ostatnim czasie doszło do urazu głowy? –jeśli tak, to kiedy? wjakich okolicznościach?, 
+
+h)
+czy przechodził zabiegi operacyjne w obrębie głowy?, 
+
+i)
+ czy występuje podwyższona temperatura ciała?, 
+
+j)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+k)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)możliwości wystąpienia kolejnych drgaweki przekazaniu informacji o sposobie udzielania pierwszej pomocy; 
+2) zachłyśnięciu; 
+3)zatruciu substancjami chemicznymi; 
+4)rzucawce. 
+10. DUSZNOŚĆ 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) 
+jakie są okoliczności wystąpienia objawów (np. po zadławieniu, w spoczynku, po wysiłku, po urazie w szczególnościw obrębieszyi iklatkipiersiowej, narażenie naoparytechniczne, zadymienie,inhalacja substancją psychoaktywną), 
+
+b)
+od kiedyjest duszność? (nagła, przewlekła, narastająca), 
+
+c)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+d)
+kolor, wilgotność, wygląd powłok skórnych – np.: spocony, blady, siny, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: ”Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+e)
+w jakiej pozycji znajduje się pacjent?, 
+
+f)
+czy występują inne objawy niepokojące np. kaszel, trudność w mówieniu, krew w plwocinie?, 
+
+g) 
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – np. astma, POCHP, infekcja dróg oddechowych, alergia, zatorowośćpłucna, stan po przebytym obrzęku płuc, stan po zawale mięśnia sercowego?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+PAMIĘTAJ O: 
+1)odmie opłucnowej; 
+2) zatruciu tlenkiem węgla; 
+3)długotrwałym unieruchomieniu bez leków p/zakrzepowych; 
+4)substancjach psychoaktywnych; 
+5)tlenoterapii w przypadku posiadania koncentratora tlenu. 
+
+
+11. KRWOTOK, KRWAWIENIE 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? – np. przestępstwo, wypadek komunikacyjny; 
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+3) jeśli NIEPRZYTOMNY poinformuj zgłaszającego o konieczności zatamowania widocznego krwawienia/krwotoku; 
+4)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+z jakiej części ciała krwawi?, 
+
+b)
+określ stopień nasilenia i czas trwania krwawienia/krwotoku, 
+
+c)
+w zależności od stopnia nasilenia krwawienia/krwotoku – rozważ opatrunek uciskowy, 
+
+d)
+czy występują zaburzenia świadomości, mowy, zachowania (np. podsypiający, spowolniały, splątany)?, 
+
+e)
+kolor, wilgotność, wygląd powłok skórnych – np. blady, spocony, siny, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+f)
+na co choruje? od kiedy? czy przyjmuje leki i jakie?, 
+
+g)
+czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: Kontroli opatrunku 
+12. LEŻY 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? np. przestępstwo, porażenie prądem, potrącenie; 
+
+
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+3) jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+ czy występują zaburzenia świadomości?, 
+
+b)
+ czy pamięta okoliczności zdarzenia?, 
+
+c) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d)
+ czy są widoczne obrażenia, krwawienia, wymioty?, 
+
+e)
+ czy zgłasza dolegliwości? –jeśli tak, to jakie?, 
+
+f) 
+czy występują zawroty głowy, zaburzenia równowagi, mowy, widzenia, zachowania (pobudzony, 
+
+
+agresywny)?, 
+g)
+ czy występują drętwienia? – lokalizacja, 
+
+h)
+na co choruje? (np. cukrzyca, padaczka, alkoholizm) – od kiedy? czy przyjmuje leki i jakie?, 
+
+i)
+ czy występują inne objawy niepokojące osobę wzywającą?, 
+
+j)
+ czy osoba, której dotyczy zgłoszenie oczekuje pomocy medycznej?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+PAMIĘTAJ O: 
+1)udarze mózgowym; 
+2)wypadku komunikacyjnym –potrąceniu; 
+3)upadku z wysokości; 
+4)drgawkach; 
+5)cukrzycy; 
+6) zachłyśnięciu; 
+7)substancjach psychoaktywnych; 
+8)warunkach atmosferycznych. 
+
+
+13. NIEPRZYTOMNY 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? – np. zatrucie tlenkiem węgla, przestępstwo, porażenie prądem, wypadek komunikacyjny; 
+Przyjmij zgłoszenie jeśli do tej pory nie zostało przyjęte. Przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+2)jeśliNIEPRZYTOMNY I ODDYCHA: 
+a) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+b)
+kolor, wilgotność, wygląd powłok skórnych – np. spocony, blady, siny, 
+
+c)
+ czy są widoczne obrażenia, krwawienia, wymioty?, 
+
+d) 
+czy się leczy na inne schorzenia? – od kiedy? czy przyjmuje leki i jakie? – np. cukrzyca, padaczka, alkoholizm, nadciśnienie tętnicze, 
+
+e)
+ czy występują inne objawy niepokojące osobę wzywającą?, 
+
+
+f)jeślibrak przeciwwskazań, rozważ ułożenie poszkodowanego w pozycji bocznej. 
+PAMIĘTAJ O: 
+1)dolegliwościach zgłaszanych przed utratą przytomności; 
+2) zachłyśnięciu; 
+3)zatruciu tlenkiem węgla; 
+4)przedawkowaniu leków; 
+5)substancjach psychoaktywnych. 
+
+14. OPARZENIE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: a)jaka przyczyna oparzenia? (np. porażenie prądem, piorunem, otwartyogień eksplozja, substancje chemiczne 
+(ciecze, gazy, pary), wypadek komunikacyjny), 
+b)w przypadku porażenia prądem, piorunem i wypadku komunikacyjnego przejdź do właściwej procedury, 
+c)jakie części ciała są oparzone?, 
+d)czy pacjent ma trudności w oddychaniu? czy ma drapanie w gardle?, 
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+e)jak wygląda oparzone miejsce?(zaczerwienienie, pęcherze, zwęglenie), 
+f)
+ czy są widoczne inne obrażenia?jeśli tak, jakiej części ciała dotyczą i jaka jest ich rozległość?, 
+
+g)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+h)
+ czy występują inne niepokojące objawy?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)w przypadku palącejsięosoby ugaś ogień dostępnymi środkami; 
+2)oparzeniach górnych dróg oddechowych; 
+3)zaburzeniach rytmu serca, oparzeniach i obrażeniach wewnętrznych w przypadku oparzenia elektrycznego; 
+4) zatruciu tlenkiem węgla; 
+5) rozcięciu ubrania i ostrożnym usunięciu nieprzylegających fragmentów oraz zdjęciu biżuterii; 
+6) schładzaniu miejsca oparzenia do czasu przyjazdu zespołu ratownictwa medycznego lub założeniu opatrunku hydrożelowego w przypadku oparzenia termicznego; 
+7)o usunięciu mechanicznym czynnika a następnie oschładzaniu wodą w przypadku oparzenia wapnem; 
+8)nie stosowaniu żadnych leków, ani środków na miejsce oparzenia; 
+9) możliwym transporcie do ośrodka leczenia oparzeń/terapii hiperbarycznej w przypadku zaistnienia wskazań; 
+10)ewentualnym kontakcie z oddziałami leczenia oparzeń: 
+https://www.lpr.com.pl/pl/oparzenia/#post-content 
+15. WYZIĘBIENIE, HIPOTERMIA 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)jakdługo osobaprzebywała w środowisku narażona na niską temperaturę?, 
+b)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+c)
+ czy występują zawroty głowy, zaburzenia równowagi, koordynacji ruchoweji czy jest zachowane czucie?, 
+
+d)
+ czy występują dreszcze?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+e) 
+czy ma trudności w oddychaniu? – Jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+f)
+ czy są widoczne obrażenia?jeśli tak, jakiej części ciała dotyczą i jaka jest ich rozległość?, 
+
+g)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – np. cukrzyca, alkoholizm, zaburzenia psychiczne, 
+
+h)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)unieruchomieniu pacjenta –ryzyko nagłego zatrzymania krążenia (NZK); 
+2) wydłużeniu oceny oddechu upacjentów nieprzytomnych (nawet do 1 minuty); 
+3)przerwaniu wpływu niskiej temperatury na poszkodowanego; 
+4)ośrodkach leczenia hipotermii głębokiej/leczenia pozaustrojowego (ECMO). 
+
+16. PARALIŻ, BEŁKOTLIWA MOWA 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) 
+czy wystąpiły zaburzenia mowy? czy odpowiada na pytania logicznie? czy mówi wyraźnie? czy mowa jest bełkotliwa/spowolniała?, 
+
+b) 
+czy twarz zmieniła wygląd? czy kącik ust jest opadnięty? – (W razie braku jasnej odpowiedzi, poproś aby pacjent się uśmiechnął), 
+
+c) 
+czy jest osłabiona siła mięśniowa w kończynach po jednej ze stron? – (W razie braku jasnej odpowiedzi, poproś aby pacjent uniósł obie ręce przed siebie) Czy porusza się samodzielnie? czy porusza kończynami prawidłowo? czy ma zaburzenia równowagi?, 
+
+d)
+ czas wystąpienia objawów –kiedy pacjent był widziany ostatnio bez objawów?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+e)
+ czy występuje drętwienie/mrowienie?, 
+
+f)
+ czy ma zawroty, bóle głowy?, 
+
+g)
+ czy występują zaburzenia widzenia?, 
+
+h)
+ czy ma nudności/wymioty?, 
+
+i)
+ czy są widoczne obrażenia głowy?, 
+
+j)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – np. cukrzyca, alkoholizm, 
+
+k)
+czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie , poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) wskazaniach do bezpośredniego transportu do ośrodka udarowego; 
+2)zatruciach; 
+3)środkach psychoaktywnych; 
+4)cukrzycy; 
+5) ciasnocie śródczaszkowej; 
+6)o nie podawaniu leków, posiłków, napojów. 
+
+17. PORAŻENIE PRĄDEM, PIORUNEM 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? Upewnijsię, że źródło prądu zostało odłączone; 
+
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+b)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+c)
+ czy zgłasza dolegliwości ? –np.: ból w klatce piersiowej, kołatanie serca?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d)
+ czy są widoczne obrażenia, oparzenia, krwawienia?, 
+
+e)
+ czy porusza kończynami i ma zachowane czucie?, 
+
+f)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – np. choroby psychiczne, alkoholizm, 
+
+g)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie, poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+PAMIĘTAJ O: 
+1) możliwych powikłaniach np.: zaburzeniach rytmu serca, NZK; 
+2)postepowaniu jak z pacjentem urazowym; 
+3)ewentualnym kontakcie z oddziałami leczenia oparzeń: 
+https://www.lpr.com.pl/pl/oparzenia/#post-content 
+18. POWIESZENIE, ZADZIERZGNIĘCIE 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? – np.: próba samobójcza, nieszczęśliwy wypadek?; 
+2)w miarę możliwościokreśl czas zaistnienia zdarzenia; 
+3) rozważ odcięcie/zdjęcie pętli – uwzględnij ograniczenia związane z bezpieczeństwem osoby/osób wykonujących tę czynność oraz pacjenta; 
+4)określ stan pacjenta: 
+a)
+czy jest przytomny?, 
+
+b)
+ czy się porusza? czy otwiera oczy? czy nawiązuje kontakt słowny? czy reaguje na ból?, 
+
+c)
+czy oddycha?, 
+
+d)
+ czy oddycha inaczej niż zwykle? czy unosi się klatka piersiowa?, Jeśli NIEPRZYTOMNY I NIE ODDYCHA: 
+
+
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NAGŁE ZATRZYMANIE KRĄŻENIA i prowadź dalszą rozmowę. 
+Jeśli NIEPRZYTOMNY I ODDYCHA: 
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. 
+Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NIEPRZYTOMNY i prowadź dalszą rozmowę. 
+Jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+e) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+f)
+ czy są widoczne obrażenia?jeśli tak, jakiej części ciała dotyczą i jaka jest ich rozległość?, 
+
+g)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+h)
+ czy porusza kończynami i ma zachowane czucie?, 
+
+i)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? – np. choroby psychiczne, alkoholizm, 
+
+j)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+
+
+PAMIĘTAJ O: 
+1)poinformowaniu właściwych służb; 
+2)obrażeniach współistniejących; 
+3)zatruciach; 
+4)środkach psychoaktywnych; 
+5)postępowaniu jak z pacjentem urazowym. 
+
+
+19. PROBLEMY KARDIOLOGICZNE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) czy występują dolegliwości bólowe? 
+-lokalizacja bólu (jeśli ból w klatce piersiowej – przejdź do PROCEDURY BÓL W KLATCE PIERSIOWEJ), 
+b)czyma trudnościw oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+c) czy jest widoczna sinica? (usta, kończyny, powłoki brzuszne), 
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d)czyodczuwa niemiarowąpracę serca/kołatanie serca? –od kiedy? czy wcześniejbyłyjużpodobne epizody?, 
+e)
+ czy widoczne są obrzęki kończyn?, 
+
+f)
+ czy dokonano pomiaru ciśnienia tętniczego? –jeśli tak, to kiedy ijaka jest wartość ostatniego pomiaru?, 
+
+g)
+ czy występują choroby wzakresie układu krążenia: -choroba wieńcowa?, -zawał mięśnia sercowego (data, rok)?, -zaburzenia rytmu?, -operacje kardiochirurgiczne (np.: PCI, wady zastawek, tętniak, by-passy)?, -wszczepiony rozrusznik lub kardiowerter?, -choroba nadciśnieniowa?, -zatorowość płucna?, -inne, 
+
+h)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+i)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: ”Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) tętniaku i rozwarstwieniu aorty; 
+2)tamponadzie worka osierdziowego; 
+3)zatruciu lekami; 
+4) zatruciu związkami chemicznymi; 
+5)środkach psychoaktywnych. 
+20. URAZY, OBRAŻENIA 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego? – np.: przestępstwo, wypadek komunikacyjny, upadek zwysokości, niebezpieczne narzędzia/urządzenia; 
+
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) 
+jakiej części ciała dotyczy uraz i jaka jest jego rozległość? np. izolowany, wielomiejscowy, amputacja, penetrujący, 
+
+b)
+ czy występuje krwawienie/krwotok? –określ stopień nasilenia i czas krwawienia/krwotoku, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+c)w zależności od stopnia nasilenia krwawienia/krwotoku – rozważ opatrunek uciskowy, 
+d)czyma trudności w oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+e)
+ czy występują zaburzenia świadomości, mowy, widzenia zachowania (pobudzony, agresywny)?, 
+
+f)
+ czy występują dolegliwości bólowe? zaburzenia czucia?, niedowłady?, 
+
+g)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+h)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+PAMIĘTAJ O: 
+1) urazie kręgosłupa; 
+2) zabezpieczeniu ciała obcego; 
+3) zabezpieczeniu amputowanej części ciała; 
+4)centrum urazowym / centrum urazowym dla dzieci. 
+21. WYSOKIE CIŚNIENIE TĘTNICZE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) czy dokonano pomiaru ciśnienia tętniczego? –jeśli tak, to kiedy ijaka jest wartość ostatniego pomiaru?, 
+b)jakie wartości ciśnienia występują na co dzień?, 
+c)
+ czy przyjąłleki obniżające ciśnienie? –jeśli tak, to kiedy ijakie? czy nastąpiła poprawa?, 
+
+d)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania?, 
+
+
+e)czy występują dolegliwościbólowe? –np.: bóle wklatce piersiowej, bóle głowy?, od kiedyboli? – w jakich okolicznościach pojawił się ból (np. uraz, wysiłek), 
+f) czy ma trudnościw oddychaniu? –jeślikonieczne, zastosujdodatkowe pytania określające stopień trudności w oddychaniu, 
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+g)
+ czy występują zawroty głowy, zaburzenia równowagi?, 
+
+h)
+czy wymiotuje? –jeśli tak, od kiedy i ile razy, jaką treścią?, 
+
+i)
+ czy występują drętwienia ? –jeśli tak, określich lokalizację, 
+
+j)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+k)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+22. TONIĘCIE 
+1) czy okoliczności zdarzenia mogą mieć wpływ na bezpieczeństwo wzywającego? poinformuj odpowiednie służby; 
+2)w miarę możliwości –określ czas zaistnienia zdarzenia; 
+3) jeśli pacjent nie został wydobyty z wody – rozważ wyciągnięcie poszkodowanego z wody – uwzględnij ograniczenia związane zbezpieczeństwem osoby/osób wykonujących tę czynność oraz pacjenta; 
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia i prowadź dalszą rozmowę. 
+4)określ stan pacjenta: 
+a)
+czy jest przytomny?, 
+
+b)
+ czy się porusza? czy otwiera oczy? czy nawiązuje kontakt słowny? czy reaguje na ból?, 
+
+c)
+czy oddycha?, 
+
+d)
+ czy oddycha inaczej niż zwykle? czyunosi się klatka piersiowa?, Jeśli NIEPRZYTOMNY I NIE ODDYCHA: 
+
+
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. 
+Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NAGŁE ZATRZYMANIE KRĄŻENIA i prowadź dalszą rozmowę. 
+Jeśli NIEPRZYTOMNY I ODDYCHA: 
+Przyjmij zgłoszenie i przekaż formatkę do dyspozytora medycznego wysyłającego. 
+Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego”, PRZEJDŹ DO PROCEDURY NIEPRZYTOMNY i prowadź dalszą rozmowę. 
+Jeśli PRZYTOMNY: 
+e) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+f)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+g)
+ czy są widoczne obrażenia?jeśli tak, jakiej częściciała dotyczą i jaka jest ich rozległość?, 
+
+h)
+ czy porusza kończynami i ma zachowane czucie?, 
+
+i)
+ czy zgłasza jakieś dolegliwości?, 
+
+j)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+PAMIĘTAJ O: 
+1)skoku do wody, traktuj zdarzenie jako uraz kręgosłupa; 
+2)zapewnieniu komfortu termicznego adekwatnie do potrzeb i panujących warunków atmosferycznych; 
+3) możliwej konieczności transportu do ośrodka terapiihiperbarycznej w przypadku zaistnienia wskazań. 
+
+
+23. WYPADEK KOMUNIKACYJNY 
+1) czy okoliczności zdarzenia mogą mieć wpływ na bezpieczeństwo wzywającego? Zabezpieczenie miejsca zdarzenia (trójkąt, wyłączenie zapłonu, kamizelka); 
+2)doprecyzuj miejsce zdarzenia: 
+a)
+ oznaczenie drogi, pikietaż, kierunek drogi, ewentualnie współrzędne geograficzne, 
+
+b)
+ województwo, powiat, gmina, większa miejscowość, charakterystyczny punkt, 
+
+
+3)określ: 
+a)
+liczbę osób uczestniczących w zdarzeniu, która odpowiadaliczbie poszkodowanych, 
+
+b)
+liczbę i rodzaj pojazdów uczestniczących w zdarzeniu, 
+
+c)
+ mechanizm zdarzenia (potrącenie, zderzenie, dachowanie), 
+
+d)
+liczbę osób uwięzionych/pozostających w pojazdach; 
+
+
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego oraz powiadom właściwe służby (zaznacz w formatce – PSP, Policja), poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+4)jeśli to możliwe określ stan poszkodowanego / poszkodowanych. 
+W ZALEŻNOŚCI OD UZYSKANYCH INFORMACJI PRZEJDŹ DO ODPOWIEDNIEJ 
+
+
+PROCEDURY. 
+Rozważ ewakuację z pojazdu, jeśli osoba poszkodowana pozostaje w pojeździe. Uwzględnij ograniczenia związane z bezpieczeństwem osoby/osób wykonujących tę czynność oraz osoby poszkodowanej. 
+PAMIĘTAJ O: 
+1)określeniu kodu substancji wprzypadku pojazdów przewożących substancje niebezpieczne; 
+2)centrum urazowym/centrum urazowym dla dzieci. 
+
+
+24. ZABURZENIA PSYCHICZNE 
+1)czyokolicznościzdarzenia mogą miećwpływnastan pacjenta i bezpieczeństwowzywającego? (np. czybędzie możliwe dotarcie do pacjenta? –zamknięte drzwi, pacjent zabarykadowany); 
+2) czy pacjent zagraża sobie lub komuś z jego bezpośredniego otoczenia?jeśli tak –zadysponuj Policję; 
+Uwaga: dokonaj analizy wszystkich okoliczności mogących mieć wpływ na bezpieczeństwo członków zespołu ratownictwa medycznego oraz innych osób w miejscu zdarzenia (np.: agresja, możliwość użycia broni i innych niebezpiecznych narzędzi), w razie potrzeby powiadom inne służby. 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+czy jest leczony psychiatrycznie? –jeśli tak, to od kiedy?, 
+
+b)
+ czy grozi samobójstwem lub samookaleczeniem? –charakter gróźb, 
+
+
+Jeśli tak: ponownie rozważ zadysponowanie innych służb (Policja, PSP). Przyjmij zgłoszenie: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i przekaż formatkę do dyspozytora medycznego wysyłającego. 
+c)
+ czy można z pacjentem nawiązać logiczny kontakt? (np. omamy słuchowe/wzrokowe, halucynacje)?, 
+
+d)
+czy przyjmuje regularnie leki ?, 
+
+e)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1) urazie głowy; 
+2)cukrzycy; 
+3) chorobie Alzheimera; 
+4) zatruciu związkami chemicznymi; 
+5)środkach psychoaktywnych; 
+6)zespole abstynencyjnym; 
+7)braku wskazań  np. awantura domowa rozważ przekierowanie zdarzenia do Policji. 
+25. NAGŁE ZATRZYMANIE KRĄŻENIA 
+1)czyokoliczności zdarzenia mogą mieć wpływ nastan pacjenta i bezpieczeństwo wzywającego? – np.: zatrucie tlenkiem węgla, przestępstwo, porażenie prądem, wypadek komunikacyjny; 
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę . 
+2) udzielaj niezbędnych porad w zakresie sposobu udzielania pierwszej pomocy do czasu przybycia zespołu ratownictwa medycznego zgodnych z aktualną wiedzą medyczną. 
+PAMIĘTAJ O: 
+1) automatycznego defibrylatora zewnętrznego – AED; 
+2) możliwości wykorzystania w telefonie wzywającego trybu głośnomówiącego. 
+
+26. ZACHŁYŚNIĘCIE, CIAŁO OBCE W DROGACH ODDECHOWYCH 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu i przejdź do zasad udzielania pierwszej pomocy przy ZACHŁYŚNIĘCIU – jeśli nie, kontynuuj wywiad, 
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+b)
+ czy wystąpiła utrata przytomności?, 
+
+c)
+ czy występują: -zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, -zawroty głowy, zaburzenia równowagi?, -nudności, wymioty?, 
+
+d)
+ czy są widoczne inne obrażenia? jeśli tak, jakiej częściciała dotyczą i jaka jest ich rozległość?, 
+
+e)
+ czy zgłasza dolegliwości bólowe? jeśli tak – dopytaj o lokalizację, czas trwania i charakter bólu, 
+
+f)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+g)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIETAJ O: 
+Następstwach zachłyśnięcia(nawetkrótkotrwałych)np.zachłystowymzapalaniu płuc, samoistnej odmie prężnej, 
+niedodmie. 
+
+
+
+27. ZATRUCIE 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego?; 
+2)określ: 
+a)
+rodzaj i ilośćsubstancji, 
+
+b)
+czas ekspozycji, 
+
+c)
+liczbę osób poszkodowanych/ osób narażonych na ekspozycję; 
+
+
+3)jeślito możliwe, przerwijdziałanie substancjitrującej –uwzględnijograniczenia związane z bezpieczeństwem osoby/osób wykonujących tę czynność oraz osób poszkodowanych/ osób narażonych na ekspozycję; 
+Rozważ przyjęcie zgłoszenia oraz poinformowanie niezbędnych służb (jeśli konieczne). Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+4)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+b)
+ czy występują objawy towarzyszące: -zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)? -zawroty głowy, zaburzenia równowagi?, 
+
+c) 
+czy jest spocony? czy jest blady? czy jest czerwony na twarzy?, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d) 
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? (np. choroby układu krążenia, cukrzyca, padaczka, alkoholizm), 
+
+e)
+ czy zgłasza inne dolegliwości?, 
+
+f)
+czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)oparzeniach dróg oddechowych; 
+2) bezpieczeństwie udzielającego pomocy – unikaj wentylacji usta-usta w przypadku zatrucia cyjankami, siarkowodorem, środkami fosforoorganicznymi oraz substancjami żrącymi oraz innymi substancjami 
+nieznanego pochodzenia; 
+3) zasadach dotyczących prowokacji wymiotów wzależności od rodzaju substancji; 
+4) zabezpieczeniu opakowań/informacji o substancji; 
+5) możliwości transportu do ośrodka terapii hiperbarycznej w przypadku zaistnienia wskazań; 
+6)ewentualnym kontakcie z ośrodkiem toksykologii; 
+7) ewentualnym transporcie do ośrodka leczenia zatruć. 
+28. ZASŁABNIĘCIE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+kiedy doszło do zasłabnięcia?, 
+
+b) 
+na co choruje? – od kiedy? czy przyjmuje leki i jakie? (np. problemy kardiologiczne, cukrzyca, padaczka itp.) Rozważ przejście do właściwej PROCEDURY, 
+
+c) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego” i prowadź dalszą rozmowę. 
+d)
+ czy pacjent bezwiednie oddał stolec lub mocz?, 
+
+e)
+ czy występują: -zaburzenia świadomości, mowy, widzenia, zachowania?, -zawroty głowy, zaburzenia równowagi?, -nudności, wymioty?, 
+
+f)
+ czy porusza kończynami i ma zachowane czucie?, 
+
+g)
+ czyzgłasza dolegliwości bólowe? –jeśli tak – dopytaj o lokalizację, czas trwania, charakter bólu, 
+
+h)
+ czy są widoczne obrażenia?jeśli tak, jakiej częściciała dotyczą i jaka jest ich rozległość?, 
+
+i)
+czy przyjmuje leki? –jeśli tak – jakie?, 
+
+j)
+ czy występują inne objawy niepokojące osobę wzywającą?, 
+
+k)
+ czy przed zasłabnięciem wystąpiły objawy niepokojące?. 
+
+
+Rozważ przyjęcie zgłoszenia. .Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: ”Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+1)niekontrolowanym przyjęciu leków podanych przez świadków zdarzenia, np. nitrogliceryna; 
+2)doznanych urazach w ostatnim czasie; 
+3) zatruciu związkami chemicznymi, np. lekami; 
+4)środkach psychoaktywnych; 
+5) zachłyśnięciu. 
+
+29. ZŁE SAMOPOCZUCIE 
+1)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+2)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+ czy pacjent zgłasza jakieś dolegliwości?, 
+
+b)
+na co choruje? od kiedy? czy przyjmuje leki? jeśli tak to jakie?, 
+
+c)
+ czy pacjent doznał urazu ? – jakiego i kiedy?, 
+
+d)
+kolor, wilgotność, wygląd  powłok skórnych? – np. spocony, blady, wybroczyny, 
+
+e)
+ czy występują: -zaburzenia świadomości, zachowania, mowy, widzenia?, -zawroty głowy, zaburzenia równowagi?, -nudności, wymioty?, 
+
+f)
+czy oddaje mocz i stolec?, 
+
+g)
+jaka jest temperatura ciała?, 
+
+h)
+ czy przebywał infekcję w ostatnim czasie?, 
+
+i)
+ czy był wostatnim czasie operowany lub przebywał w szpitalu?, 
+
+j)
+ czy występował wysiłek fizyczny?, 
+
+k)
+ czy przyjmował inne substancje? –(np. środki psychoaktywne „dopalacze”, napoje energetyczne), 
+
+l)
+czy w ostatnim czasie odbywał podróże do innych krajów?, 
+
+m)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+
+
+
+30. PACJENT PEDIATRYCZNY, DZIECKO 
+1) czy okoliczności zdarzenia mogą mieć wpływ na stan pacjenta i bezpieczeństwo wzywającego?; 
+2)postępuj zgodnie z OGÓLNĄ PROCEDURĄ PRZYJĘCIA ZGŁOSZENIA; 
+3)jeśli PRZYTOMNY – zbierz wywiad medyczny: 
+a)
+ czy płacze? czy jest senne? czy jest wiotkie?, 
+
+b) 
+czy oddycha normalnie? – czy oddycha inaczej niż zwykle? – zastosuj dodatkowe pytania np.: o rodzaj oddechu: bezdechy, oddech stękający, o rodzaj kaszlu, 
+
+
+c)jakiego koloru są usta i skóra dziecka?, 
+d)
+ czy kończyny są ciepłe?, 
+
+e) 
+czy występują dodatkowe objawyskórne np.: wybroczyny, wysypka? – od kiedy? (ewentualnie dodatkowe pytania), 
+
+f)
+ czy ma temperaturę? –jak wysoką i od kiedy? (ewentualnie dodatkowe pytania), 
+
+g)
+ czy miało drgawki? – kiedy?, 
+
+h)
+ czy występują obrażenia? – rodzaj, lokalizacja, mechanizm urazu, 
+
+i)
+czy wymiotuje? – jeśli tak, to od kiedy i ile razy?, 
+
+j)
+ czy ma biegunkę? –jeśli tak, to od kiedy i ile oddał stolców?, 
+
+k)
+ czy przyjmuje płyny? ile?, 
+
+l)
+ czy występują dolegliwości bólowe? (ewentualnie dodatkowe pytania), 
+
+m)
+na co choruje? – od kiedy? czy przyjmuje leki i jakie?, 
+
+n)
+ czy występują inne objawy niepokojące osobę wzywającą?. 
+
+
+Rozważ przyjęcie zgłoszenia. Jeśli przyjmiesz zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia: „Zgłoszenie przyjęte proszę czekać na przyjazd zespołu ratownictwa medycznego, w przypadku zmiany stanu pacjenta proszę o ponowny kontakt”. 
+Jeśli stwierdzasz brak nagłego stanu zagrożenia zdrowotnego lub jest to połączenie informacyjne – PRZEJDŹ DO PROCEDURY ODMOWY PRZYJĘCIA ZGŁOSZENIA. 
+PAMIĘTAJ O: 
+Ryzyku przemocy wobec dziecka. 
+
+31. WYPADEK NURKOWY, DEKOMPRESYJNY 
+1) czy okoliczności zdarzenia mogą mieć wpływ na bezpieczeństwo wzywającego? poinformuj odpowiednie służby ratownicze; 
+2) ustal liczbę poszkodowanych; 
+3) czy poszkodowani zostali wydobyci z wody? jeślinie, rozważwydobycie zwracającuwagę nabezpieczeństwo osób ratujących; 
+4) czy oddychali sprężonym gazem pod wodą? (np. ze sprzętu nurkowego, z zatopionego wraku/pojazdu); 
+5)w miarę możliwości –określ czas zaistnienia zdarzenia; 
+Przyjmij zgłoszenie, przekaż formatkę do dyspozytora medycznego wysyłającego. Jednocześnie poinformuj osobę wzywającą o przyjęciu zgłoszenia i prowadź dalszą rozmowę. 
+6)jeśliPRZYTOMNY zbierz wywiad medyczny: 
+a) 
+czy ma trudności w oddychaniu? – jeśli tak, zastosuj dodatkowe pytania określające stopień trudności w oddychaniu, 
+
+b)
+ czy są widoczne obrażenia?jeśli tak, jakiej częściciała dotyczą i jaka jest ich rozległość?, 
+
+c)
+ czy występują zaburzenia świadomości, mowy, widzenia, zachowania (pobudzony, agresywny)?, 
+
+d)
+ czy porusza kończynami i ma zachowane czucie?, 
+
+e)
+ czy zgłasza jakieś dolegliwości?, 
+
+f)
+ czy występują inne objawy niepokojące osobę wzywającą?, g)ustalistotne okolicznościnurkowania wzakresie maksymalnejgłębokości, czasu pobytu podwodą, użytych 
+
+
+mieszanin oddechowych. 
+PAMIĘTAJ O: 
+1) nurkowie najczęściej nurkują parami –pamiętaj o drugim nurku; 
+2) wielu przyczynach i skutkach wypadków nurkowych (np. uraz ciśnieniowy płuc, choroba dekompresyjna, toksyczność tlenowa, tonięcie, hipotermia) –mogą współistnieć; 
+3) choroba dekompresyjna może występować też w ekspozycjach hipobarycznych (przelot samolotem po nurkowaniu, dehermetyzacja kabiny samolotu, skoki spadochronowe z dużej wysokości); 
+4) w wypadku o charakterze wojskowym przekaż informacje do Wojewódzkiego Koordynatora Ratownictwa Medycznego celem poinformowania Wojskowego Ośrodka Hiperbarycznego – WIM tel. całodobowy 
+261 817 688; 
+5) w większości przypadków jest rekomendowane leczenie w ośrodku terapii hiperbarycznej po ustaleniu wskazań; transport do ośrodka terapii hiperbarycznejnależy uzgodnić z tym ośrodkiem; 
+6)zapewnieniu komfortu termicznego adekwatnie do potrzeb i panujących warunków atmosferycznych; 
+7) poinformuj zespół ratownictwa medycznego o konieczności przekazania wraz z poszkodowanym komputera i sprzętu nurkowego. 
+32. ODMOWAPRZYJĘCIA ZGŁOSZENIA 
+1)dyspozytor medyczny przyjmujący przeprowadza szczegółowy wywiad medyczny; 
+2) dyspozytor medyczny przyjmujący w razie stwierdzenia, na podstawie przeprowadzonego wywiadu medycznego, braku stanu nagłego zagrożenia zdrowotnego, informuje osobę wzywającą o odmowie przyjęcia zgłoszenia izadysponowania zespołu ratownictwa medycznego; 
+3)dyspozytor medyczny przyjmujący informuje osobę wzywającą o dalszym możliwym postępowaniu: 
+a) 
+kontakcie z podstawową opieką zdrowotną lub nocną i świąteczną opieką zdrowotną w zakresie wizyty ambulatoryjnej lub domowej, 
+
+b)
+innych rozwiązaniach wynikających ze stanu zdrowia, anie ujętych w niniejszym obwieszczeniu; 
+
+
+4) w przypadku stwierdzenia braku znajomości przez osobę wzywającą numerów kontaktowych do lekarza udzielającego świadczeń w ramach nocnej i świątecznej opieki zdrowotnej, dyspozytor medyczny przyjmujący przekazuje tej osobie niezbędne dane kontaktowe; 
+5) dyspozytor medyczny przyjmujący informuje osobę wzywającą, że w przypadku gwałtownego pogorszenia stanu zdrowotnego osoby, której wezwanie dotyczy lub wystąpienia nowych, niepokojących objawów, prosi 
+o ponowny kontakt z dyspozytorem medycznym. 
+
+
+
+
+
+
+====================================================
+
+
+
+============================================
+Schemat postępowania dla dyspozytorów medycznych systemu Państwowe Ratownictwo Medyczne z pacjentem spełniającym kryteria epidemiologiczne 
+
+Weź pod uwagę tylko te elementy, które dotyczą rozmowy z osobą zgłaszającą.
+ 
+Przeprowadź wywiad medyczny na podstawie procedury ogólnej zawartej w algorytmach dla dyspozytora medycznego 
+Każdy wywiad poszerz o występowanie następujących objawów infekcyjnych: 
+. gorączki, 
+. kaszlu, 
+. duszności lub trudności w oddychaniu. 
+Uwzględnij wywiad epidemiologiczny (przebywanie na kwarantannie lub w izolacji domowej, objęcie nadzorem epidemiologicznym, bliski kontakt z osobą z potwierdzonym lub prawdopodobnym zachorowaniem na chorobę zakaźną lub z osobą przebywającą w izolacji domowej - w ciągu ostatnich X-dni (x- oznacza liczbę dni wskazaną w wytycznych GIS) 
+Uzyskane informacje wpisz w treści zebranego wywiadu. 
+ 
+KRYTERIUM A 
+Postępowanie z pacjentem bez objawów chorobowych, który:
+spełnia KRYTERIA EPIDEMIOLOGICZNE, tj. w okresie ostatnich X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS):
+• miał bliski kontakt z osobą z potwierdzonym lub prawdopodobnym zachorowaniem na chorobę zakaźną lub
+• osobą przebywającą na kwarantannie albo w izolacji domowej,
+• przebywa/przebywał na kwarantannie albo w izolacji domowej,
+• jest objęty nadzorem epidemiologicznym.
+
+
+1.Uzyskaj dane osobowe pacjenta (imię, nazwisko, adres i telefon, email,
+PESEL).
+2. Poinformuj pacjenta o konieczności odbycia X-dniowej kwarantanny (x- oznacza liczbę dni wskazaną w wytycznych GIS) w domu lub innym miejscu odosobnienia (licząc od dnia kontaktu).
+3. Poinformuj pacjenta o konieczności częstego mycia rąk i zachowaniu środków ostrożności.
+4. Poinformuj pacjenta o konieczności prowadzenia u siebie samoobserwacji przez okres X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS) od czasu kontaktu z osobą, u której stwierdzono zakażenie chorobą zakaźną w tym codziennego (rano i wieczorem) pomiaru temperatury.
+5. Przekaż rodzinie i osobom z najbliższego kontaktu pacjenta o konieczności prowadzenia u siebie samoobserwacji przez okres X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS) od czasu ostatniego kontaktu z osobą, u której wystąpiło podejrzenie zakażenia chorobą zakaźną, w tym codziennego (rano i wieczorem) pomiaru temperatury oraz o konieczności odbycia obowiązkowej X-dniowej (x- oznacza liczbę dni wskazaną w wytycznych GIS) kwarantanny w domu lub w innym miejscu odosobnienia.
+6. Poinformuj dyspozytora głównego o konieczności przekazania danych pacjenta, w celu objęcia go kwarantanną do Powiatowego Państwowego Inspektora Sanitarnego właściwego ze względu na miejsce podejrzenia.
+7. Poinformuj pacjenta o możliwości teleporady w ramach POZ/NiŚOZ, w przypadku wystąpienia objawów takich jak stan podgorączkowy, kaszel, złe samopoczucie, nieżyt nosa, ból gardła.
+8. Poinformuj pacjenta o możliwości wezwania ZRM (999) w przypadku wystąpienia stanu nagłego zagrożenia zdrowotnego (np. duszność).
+
+
+=================
+KRYTERIUM B
+Postępowanie z pacjentem z objawami chorobowymi stan podgorączkowy, złe samopoczucie, nieżyt nosa, ból gardła, gorączka <38.0 st.C, który:
+spełnia KRYTERIA EPIDEMIOLOGICZNE, tj. w okresie ostatnich X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS):
+• miał bliski kontakt z osobą z potwierdzonym lub prawdopodobnym zachorowaniem na chorobę zakaźną lub
+• osobą przebywającą na kwarantannie albo w izolacji domowej,
+• przebywa/przebywał na kwarantannie albo w izolacji domowej,
+• jest objęty nadzorem epidemiologicznym.
+
+1.Uzyskaj dane osobowe pacjenta (imię, nazwisko, adres i telefon, email, PESEL).
+2. Poinformuj pacjenta lub osobę zgłaszającą o konieczności zwrócenia się do POZ/NiŚOZ w celu uzyskania teleporady.
+3. Poinformuj pacjenta lub osobę zgłaszającą o możliwości wezwania ZRM (112; 999), jeśli pomimo leczenia pojawi się duszność, temp. ciała wzrośnie powyżej 380C lub wystąpią inne niepokojące objawy świadczące o nagłym pogorszeniu stanu zdrowia w przebiegu infekcji.
+4. Poinformuj pacjenta o konieczności odbycia X-dniowej (x- oznacza liczbę dni wskazaną w wytycznych GIS) kwarantanny w domu lub w innym miejscu odosobnienia.
+5. Przekaż rodzinie i osobom z najbliższego kontaktu pacjenta o konieczności prowadzenia u siebie samoobserwacji przez okres X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS) od czasu ostatniego kontaktu z osobą, u której wystąpiło podejrzenie zakażenia chorobą zakaźną, w tym codziennego (rano i wieczorem) pomiaru temperatury oraz o konieczności odbycia obowiązkowej (liczba dni zgodnie z aktualnymi zaleceniami inspekcji sanitarnej) X-dniowej kwarantanny (x- oznacza liczbę dni wskazaną w wytycznych GIS) w domu lub w innym miejscu odosobnienia.
+6. Poinformuj dyspozytora głównego o konieczności przekazania danych pacjenta, w celu objęcia go kwarantanną do Powiatowego Państwowego Inspektora Sanitarnego właściwego ze względu na miejsce podejrzenia.
+
+
+=================
+KRYTERIUM C 
+Postępowanie z pacjentem z objawami infekcji układu oddechowego, spełniającym którykolwiek z warunków: gorączka >38.0 st. C, duszność, zaburzenia świadomości, niepohamowany kaszel, który:
+spełnia KRYTERIA EPIDEMIOLOGICZNE, tj. w okresie ostatnich X dni (x- oznacza liczbę dni wskazaną w wytycznych GIS):
+• miał bliski kontakt z osobą z potwierdzonym lub prawdopodobnym zachorowaniem na chorobę zakaźną lub
+• osobą przebywającą na kwarantannie albo w izolacji domowej,
+• przebywa/przebywał na kwarantannie albo w izolacji domowej,
+• jest objęty nadzorem epidemiologicznym.
+
+1. Uzyskaj dane osobowe pacjenta (imię, nazwisko, adres i telefon, email, PESEL).
+2. Poinformuj pacjenta, aby unikał kontaktu z innymi osobami oraz pozostał w miejscu aktualnego pobytu do czasu przyjazdu zespołu ratownictwa medycznego.
+3. Wydaj zespołowi ratownictwa medycznego dyspozycję wyjazdu ambulansem umożliwiającym przewóz chorego w warunkach zapewniających jego izolację (personel wyposażony w odpowiednie środki ochrony osobistej).
+4. Przekaż osobie zgłaszającej, że rodzina i osoby z najbliższego kontaktu pacjenta będą podlegać obowiązkowej X-dniowej kwarantannie w domu lub w innym miejscu odosobnienia.
+5. Przekaż rodzinie i osobom z najbliższego kontaktu pacjenta o konieczności prowadzenia u siebie samoobserwacji przez okres 14 dni od czasu ostatniego kontaktu z osobą, u której wystąpiło podejrzenie zakażenia chorobą zakaźną, w tym codziennego (rano i wieczorem) pomiaru temperatury oraz o konieczności odbycia obowiązkowej X-dniowej kwarantanny w domu lub w innym miejscu odosobnienia.
+6. Skontaktuj się z WKRM celem ustalenia wolnego miejsca w oddziale zakaźnym lub obserwacyjno-zakaźnym. W przypadku pacjenta z innymi ciężkimi schorzeniami np. (np. udar, OZW, uraz, niedrożność układu pokarmowego, ostry stan zapalny w obrębie jamy brzusznej, krwotok itp.) – transport pacjenta do szpitala jednoimiennego zakaźnego.
+7. W przypadku gdy stan zdrowia pacjenta nie pozwala na przewiezienie do szpitala jednoimiennego lub szpitala posiadającego oddział zakaźny/obserwacyjno-zakaźny lub w razie braku możliwości leczenia pacjenta w tych podmiotach, pacjent powinien być przewieziony do innego szpitala zgodnie z jego stanem zdrowia.
+8. Wskaż zespołowi ratownictwa medycznego dyspozycje co do docelowego miejsca, w którym pacjent będzie hospitalizowany.
+9. Niezwłocznie poinformuj szpital, o skierowaniu do niego pacjenta podejrzanego o zakażenie chorobą zakaźną
+10. Poinformuj dyspozytora głównego o konieczności przekazania danych pacjenta, w celu objęcia go kwarantanną do Powiatowego Państwowego Inspektora Sanitarnego właściwego ze względu na miejsce podejrzenia.
+
+ 
+Zadania głównego dyspozytora medycznego 
+Utrzymywanie kontaktu z wojewódzkim koordynatorem ratownictwa medycznego w celu pozyskania informacji nt. liczby aktualnie wolnych łóżek szpitalnych na oddziałach zakaźnych, a także w celu rozwiązywania problemów związanych z przekazaniem pacjenta przez ZRM na SOR/IP. 
+Zadania dyspozytora medycznego wysyłającego 
+We współpracy z głównym dyspozytorem medycznym oraz kierownikiem zespołu ratownictwa medycznego ustala transport pacjenta do odpowiedniego szpitala i informuje szpital o transporcie pacjenta podejrzanego o zarażenie chorobą zakaźną. 
+ 
+Definicja bliskiego kontaktu: 
+• przebywanie w bezpośredniej bliskości (twarzą w twarz) osoby chorej-przez dowolny czas lub bezpośredni kontakt fizyczny z pacjentem z potwierdzoną chorobą zakaźną BEZ ODZIEŻY OCHRONNEJ lub z NIEPRAWIDŁOWO STOSOWANĄ ODZIEŻĄ OCHRONNĄ, 
+
+• bezpośredni kontakt z wydzielinami osoby zakaźnej (np. dotykanie zużytej chusteczki higienicznej, narażenie na kaszel osoby chorej) BEZ ODZIEŻY OCHRONNEJ lub  z NIEPRAWIDŁOWO STOSOWANĄ ODZIEŻĄ OCHRONNĄ, 
+
+• pozostawanie w bezpośrednim kontakcie z pacjentem z podejrzeniem choroby zakaźnej,  lub w odległości mniejszej niż 2m przez ponad 15 min, BEZ ODZIEŻY OCHRONNEJ lub  z NIEPRAWIDŁOWO STOSOWANĄ ODZIEŻĄ OCHRONNĄ 
+
+ 
+Do zadań dyspozytora głównego należy przekazanie danych pacjenta do Powiatowej Stacji Sanitarno-Epidemiologicznej 
+Zgłoszenie telefonicznie lub e-mail. 
+Zgłoszenie powinno zawierać: 
+1. Imię i nazwisko. 
+2. PESEL (albo rodzaj, nr i seria innego dokumentu potwierdzającego tożsamość). 
+3. Adres zamieszkania (państwo, miasto, województwo/region, powiat, ulica, nr domu, nr mieszkania, kod pocztowy). 
+4. Nr tel. do kontaktu (najlepiej komórkowy, może być więcej niż jeden). 
+5. Adres e-mail do kontaktu. 
+6. Adres tymczasowy – jeżeli pacjent jest w Polsce tylko przejazdem (miasto, ulica, nr domu, nr mieszkania, kod pocztowy, 
+ew. nazwa hotelu). 
+7. Informację o kontakcie pacjenta z domownikami lub osobami z bliskiego kontaktu. 
+8. Osoba do kontaktu w razie nagłej potrzeby (imię i nazwisko, nr tel. najlepiej komórkowy). 
+
+
+
+
+==================================================
+
+
+DOBRE PRAKTYKI POSTĘPOWANIA DYSPOZYTORÓW MEDYCZNYCH I ZESPOŁÓW RATOWNICTWA MEDYCZNEGO Z PACJENTEM Z PODEJRZENIEM UDARU MÓZGU 
+ 
+  
+1. Dyspozytor medyczny – wywiad medyczny 
+ 
+Wywiad medyczny przeprowadzany jest przez dyspozytora medycznego na podstawie procedur przeprowadzania wywiadu medycznego, udostępnionych dyspozytorowi medycznemu przez dysponenta zespołów ratownictwa medycznego, który zatrudnia dyspozytora medycznego, stanowiących zbiór pytań i rekomendacji wspomagających podjęcie decyzji przez dyspozytora medycznego, uwzględniających zalecenia wynikające z aktualnej wiedzy medycznej. 
+Pamiętaj!!! 
+. Podczas zbierania wywiadu medycznego podejmij próbę ustalenia dokładnego czasu wystąpienia objawów wskazujących na podejrzenie wystąpienia udaru mózgu. 
+
+
+
+. W przypadku braku możliwości ustalenia dokładnego czasu wystąpienia objawów należy ustalić, kiedy osoba po raz ostatni widziana była bez  objawów udaru mózgu. 
+
+
+ 
+. W polu wywiad medyczny w formatce zgłoszenia w Systemie Wspomagania Dowodzenia Państwowego Ratownictwa Medycznego umieść informację  o czasie występowania objawów wskazujących na podejrzenie udaru mózgu. 
+
+
+ 
+. Gdy czas, jaki upłynął od pojawienia się pierwszych objawów wskazujących na podejrzenie udaru mózgu jest krótszy niż 4,5 godziny, zawsze nadaj 1 KOD PILNOŚCI. 
+
+
+ 
+2. Dyspozytor medyczny – zadysponowanie zespołu ratownictwa medycznego 
+ 
+Do pacjenta z podejrzeniem udaru mózgu zadysponuj ten zespół ratownictwa medycznego, który najszybciej dotrze na miejsca zdarzenia. 
+Pamiętaj!!! 
+. Przy dysponowaniu zespołu ratownictwa medycznego należy maksymalnie skrócić czas dotarcia pacjenta do oddziału udarowego. 
+
+
+ 
+. Przy dysponowaniu zespołu ratownictwa medycznego rozważ równoczasowe zadysponowanie lotniczego zespołu ratownictwa medycznego  – dotyczy zdarzeń w których czas transportu drogą lotniczą z miejsca zdarzenia do oddziału udarowego jest krótszy od czasu transportu zespołem naziemnym. 
+
+
+3. Zespół ratownictwa medycznego – postępowanie na miejscu zdarzenia  
+
+
+ 
+. ustalenie czasu wystąpienia objawów  
+
+
+Podczas zbierania wywiadu należy ustalić dokładny czas wystąpienia objawów udaru mózgu. W przypadku braku możliwości ustalenia dokładnego czasu wystąpienia objawów udaru mózgu, należy ustalić, kiedy osoba po raz ostatni widziana była bez występujących objawów.  
+ 
+. badanie przedmiotowe i podmiotowe pacjenta  
+
+
+Podczas badania przedmiotowego i podmiotowego należy zwrócić szczególną uwagę na: 
+- zaburzenia świadomości, widzenia; 
+- zawroty głowy, zaburzenia równowagi; 
+- zaburzenia mowy – mowa bełkotliwa, niezrozumiała, afazja; 
+- niedowład lub porażenie połowicze kończyn górnych lub dolnych; 
+- asymetrię twarzy, niedowład lub porażenie mięśni po jednej stronie twarzy; 
+- połowicze zaburzenia czucia; 
+- wystąpienie ataku padaczkowego w ostatnim okresie czasu; 
+- objawy oponowe; 
+- anizokorię; 
+- przyjmowane leki oraz ich dawki, szczególnie przeciwzakrzepowe, przeciwpadaczkowe; 
+- schorzenia towarzyszące; 
+- wystąpienie urazów w ostatnim czasie; 
+- przebyte zabiegi; 
+- ciśnienie tętnicze krwi; 
+- glikemię; 
+- kontrolę parametrów życiowych. 
+ 
+Podczas zbierania wywiadu należy ustalić osobę do kontaktu oraz numer telefonu do tej osoby.  
+ 
+. postępowanie z pacjentem z podejrzeniem udaru mózgu 
+
+
+  
+ 
+ 
+ 
+Pamiętaj!!! 
+ 
+Przy postępowaniu z pacjentem z podejrzeniem udaru mózgu: 
+ 
+. nie należy podawać leków obniżających ciśnienie tętnicze krwi bez konsultacji  
+
+
+z lekarzem neurologiem z oddziału udarowego; 
+ 
+. nie należy podawać insuliny celem obniżenia poziomu glikemii; 
+
+
+ 
+. należy zapewnić skuteczne natlenienie i wentylację (rurka ustno-gardłowa, tlenoterapia przy hipoksemii SaO2 < 94% donosowa podaż tlenu 4-6 l/ min,  w przypadku zaburzenia oddychania rozpoczęcie sztucznej wentylacji); 
+
+
+ 
+. należy zapewnić dwa dostępy dożylne; 
+
+
+ 
+. należy monitorować parametry życiowe. 
+
+
+ 
+4. Zespół ratownictwa medycznego – powiadomienie dyspozytora medycznego 
+
+
+Po podjęciu decyzji o transporcie pacjenta do oddziału udarowego niezwłocznie powiadom dyspozytora medycznego o tym fakcie. 
+ 
+Pamiętaj!!! 
+Przy powiadamianiu dyspozytora medycznego o transporcie pacjenta z podejrzeniem udaru do oddziału udarowego, przekaż następujące informacje:  
+. czas wystąpienia objawów wskazujących na podejrzenie udaru mózgu, 
+
+. wiek pacjenta, 
+
+. objawy występujące u pacjenta, 
+
+. szacowany czas dotarcia do oddziału udarowego. 
+
+
+ 
+5. Dyspozytor medyczny – powiadomienie oddziału udarowego 
+
+
+ 
+W celu skrócenia czasu, w jakim pacjent z podejrzeniem udaru mózgu specjalistycznego otrzyma niezbędną diagnostykę i leczenie w oddziale udarowym, niezwłocznie powiadom oddział udarowy, na numer telefonu lekarza dyżurnego Oddziału Udarowego, o transporcie pacjenta przez zespół ratownictwa medycznego. 
+ 
+ 
+Pamiętaj!!! 
+Przy powiadamianiu oddziału udarowego o transporcie pacjenta z podejrzeniem udaru mózgu, przekaż następujące informacje uzyskane w ramach zbierania wywiadu medycznego oraz pozyskane od kierownika zespołu ratownictwa medycznego: 
+. czas wystąpienia objawów wskazujących na podejrzenie udaru mózgu, 
+
+. wiek pacjenta, 
+
+. objawy występujące u pacjenta, 
+
+. szacowany czas dotarcia do oddziału udarowego, 
+
+. kryptonim zespołu ratownictwa medycznego transportującego pacjenta. 
+
+
+ 
+6. Zespół ratownictwa medycznego - transport pacjenta do oddziału udarowego 
+
+
+Z uwagi na konieczność szybkiego wdrożenia specjalistycznego leczenia, należy jak najszybciej przetransportować pacjenta do specjalistycznego ośrodka posiadającego oddział udarowy.  
+Rozważ wezwanie lotniczego zespołu ratownictwa medycznego, celem jak najszybszego transportu pacjenta do specjalistycznego ośrodka. 
+O wyborze właściwego oddziału udarowego decyduje najkrótszy czas dotarcia.  
+Ustal z dyspozytorem medycznym, który oddział udarowy jest najbliższy.  
+Pamiętaj!!! 
+. W przypadku pacjenta z podejrzeniem udaru mózgu liczy się każda minuta. 
+
+
+ 
+. Najlepsze efekty terapeutyczne daje zastosowanie specjalistycznego leczenia  w ciągu pierwszych 90 min od wystąpienia objawów.  
+
+
+ 
+. W przypadku niedokrwiennego udaru mózgu wdrożenie specjalistycznego leczenia dożylną trombolizą rt-PA może być zastosowane do 4,5 godz. od chwili wystąpienia objawów. 
+
+
+ 
+. Każdy pacjent z podejrzeniem udaru mózgu, u którego objawy udaru wystąpiły nie wcześniej niż 7 dni przed wezwaniem zespołu ratownictwa medycznego powinien być leczony w oddziale udarowym. 
+
+
+ 
+. Nie należy transportować pacjentów z podejrzeniem udaru mózgu do najbliższego podmiotu leczniczego, posiadającego szpitalny oddział ratunkowy lub izbę przyjęć lecz nie posiadającego oddziału udarowego.  
+
+
+
+
+
+
 
