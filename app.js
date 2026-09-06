@@ -316,22 +316,22 @@ async function checkAvailableModels() {
 // Pomocnicza funkcja do opóźnień
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Odtwarzanie zapowiedzi IVR (2 do 3 powtórzeń z przerwą 1s)
-async function playWaitMessageSequence() {
+// Odtwarzanie zapowiedzi IVR z obsługą różnych plików i liczby powtórzeń
+async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "centralą 999") {
   const status = document.getElementById("call-status");
-  const repeatCount = Math.floor(Math.random() * (3 - 2 + 1)) + 2;
+  const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
 
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
 
-    status.innerText = `Łączenie... (${i + 1}/${repeatCount})`;
+    status.innerText = `Łączenie z ${label}... (${i + 1}/${repeatCount})`;
     status.style.color = "#fbbf24";
 
     await new Promise((resolve) => {
-      const waitAudio = new Audio("czekaj.mp3");
+      const waitAudio = new Audio(audioFile);
       waitAudio.onended = resolve;
       waitAudio.onerror = () => {
-        console.warn("Brak pliku czekaj.mp3, pomijam zapowiedź.");
+        console.warn(`Brak pliku ${audioFile}, pomijam zapowiedź.`);
         resolve();
       };
       waitAudio.play().catch(() => resolve());
@@ -343,6 +343,9 @@ async function playWaitMessageSequence() {
   }
 }
 
+/// Globalny kontekst medyczny zachowywany przy przełączaniu
+let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
+
 // 5. Rozpoczęcie połączenia
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
@@ -350,15 +353,18 @@ async function startCall() {
     return;
   }
 
+  const is112 = (currentNumber === "112");
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
-await requestWakeLock(); // Utrzymuje włączony ekran
-  
-  // 1. Uruchamiamy odtwarzanie zapowiedzi czekaj.mp3
-  const ivrPromise = playWaitMessageSequence();
+  await requestWakeLock();
 
-  // 2. W tle równolegle pobieramy GPS, bazę AED i model
+  // Konfiguracja zapowiedzi: 112 gra czekajcpr.mp3 (2-4 razy), 999 gra czekaj.mp3 (2-3 razy)
+  const ivrPromise = is112 
+    ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)")
+    : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+
+  // Równoległe przygotowanie danych GPS, AED i procedur
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = "";
@@ -379,71 +385,85 @@ await requestWakeLock(); // Utrzymuje włączony ekran
     return { systemPrompt, detectedModel };
   })();
 
-  // Czekamy aż skończą się komunikaty audio ORAZ przygotują dane
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
 
   if (!isConnected) return;
 
   if (!setupData || !setupData.detectedModel) {
-    showError("Nie udało się połączyć z modelem dyspozytora.");
+    showError("Nie udało się połączyć ze stacją.");
     return;
   }
 
-  await initLiveConnection(setupData.systemPrompt, setupData.detectedModel);
+  // Zapisujemy pełny prompt dyspozytora na wypadek późniejszego przełączenia z 112
+  savedMedicalContext = setupData;
+
+  if (is112) {
+    // Start rozmowy z operatorem CPR
+    const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR. Zgłoś się natychmiast, zbierz wstępne dane i po ich zebraniu powiedz o przełączeniu do dyspozytora medycznego oraz dodaj kod [PRZEŁĄCZ_DO_999].`;
+    await initLiveConnection(cprPrompt, setupData.detectedModel, "cpr");
+  } else {
+    // Bezpośredni start z dyspozytorem medycznym 999
+    await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
+  }
 }
 
 // 6. Połączenie WebSocket z Gemini Live
-async function initLiveConnection(instructions, modelName) {
+async function initLiveConnection(instructions, modelName, callMode = "medical") {
   const status = document.getElementById("call-status");
-  status.innerText = `Łączenie z dyspozytorem...`;
+  status.innerText = callMode === "cpr" ? "Łączenie z operatorem 112..." : "Łączenie z dyspozytorem 999...";
   status.style.color = "#fbbf24";
 
-  try {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-    if (audioContext.state === 'suspended') {
-      await audioContext.resume();
+  if (!audioContext) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+    } catch (e) {
+      showError("Błąd AudioContext: " + e.message);
+      return;
     }
-  } catch (e) {
-    showError("Błąd AudioContext: " + e.message);
-    return;
   }
 
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ 
-      audio: {
-        channelCount: 1,
-        sampleRate: 16000,
-        echoCancellation: true,
-        noiseSuppression: true
-      } 
-    });
-  } catch (e) {
-    showError("Brak uprawnień do mikrofonu. Zezwól na dostęp!");
-    return;
+  if (!mediaStream) {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true
+        } 
+      });
+    } catch (e) {
+      showError("Brak uprawnień do mikrofonu. Zezwól na dostęp!");
+      return;
+    }
   }
 
   const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
   webSocket = new WebSocket(uri);
 
- webSocket.onopen = () => {
-    status.innerText = "Połączenie odebrane. Dyspozytor zgłasza się...";
+  webSocket.onopen = () => {
+    status.innerText = callMode === "cpr" 
+      ? "Połączenie 112 odebrane. Zgłasza się CPR..." 
+      : "Połączenie 999 odebrane. Dyspozytor na linii...";
     status.style.color = "#4ade80";
-resetSilenceTimer();
-   
-   // Definicja profili dyspozytorów z pewnymi głosami
+
     const dispatchers = [
       { 
-        voice: "Kore", // Wyrazisty, pewny głos kobiecy
-        intro: "Odbierasz połączenie 999. Jesteś kobietą — dyspozytorką medyczną. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia." 
+        voice: "Kore", 
+        intro999: "Odbierasz połączenie 999. Jesteś kobietą — dyspozytorką medyczną. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia.",
+        intro112: "Odbierasz połączenie 112. Jesteś kobietą — operatorką numeru alarmowego 112 w CPR. Zgłoś się oficjalnym powitaniem CPR i zapytaj w czym możesz pomóc."
       },
       { 
-        voice: "Fenrir", // Spokojny, niski głos męski
-        intro: "Odbierasz połączenie 999. Jesteś mężczyzną — dyspozytorem medycznym. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia." 
+        voice: "Fenrir", 
+        intro999: "Odbierasz połączenie 999. Jesteś mężczyzną — dyspozytorem medycznym. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia.",
+        intro112: "Odbierasz połączenie 112. Jesteś mężczyzną — operatorem numeru alarmowego 112 w CPR. Zgłoś się oficjalnym powitaniem CPR i zapytaj w czym możesz pomóc."
       }
     ];
 
     const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
-    console.log("Wylosowano dyspozytora:", currentDispatcher.voice);
 
     const setupMessage = {
       setup: {
@@ -464,13 +484,15 @@ resetSilenceTimer();
 
     webSocket.send(JSON.stringify(setupMessage));
 
-    // Wymuszenie odezwania się z uwzględnieniem płci w powitaniu
+    // Odpowiedni wstęp w zależności od tego, kto odbiera (CPR czy 999)
+    const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
+
     webSocket.send(JSON.stringify({
       clientContent: {
         turns: [
           {
             role: "user",
-            parts: [{ text: currentDispatcher.intro }]
+            parts: [{ text: initialPrompt }]
           }
         ],
         turnComplete: true
@@ -478,9 +500,10 @@ resetSilenceTimer();
     }));
 
     startAudioStreaming();
+    resetSilenceTimer();
   };
 
-webSocket.onmessage = async (event) => {
+  webSocket.onmessage = async (event) => {
     try {
       let data;
       if (event.data instanceof Blob) {
@@ -494,8 +517,14 @@ webSocket.onmessage = async (event) => {
           if (part.inlineData?.data) {
             playAudioChunk(part.inlineData.data);
           }
+
+          // Wykrycie decyzji operatora 112 o przekierowaniu do Dyspozytora Medycznego
+          if (part.text && part.text.includes("PRZEŁĄCZ_DO_999") && callMode === "cpr") {
+            console.log("Operator CPR kończy wywiad. Przełączanie do 999...");
+            handleTransferTo999();
+            return;
+          }
         }
-        // Uruchamiamy odliczanie dopiero po załadowaniu całej odebranej frazy do odtworzenia
         resetSilenceTimer();
       }
     } catch (err) {
@@ -508,12 +537,48 @@ webSocket.onmessage = async (event) => {
     showError("Błąd gniazda WebSocket.");
   };
 
-  webSocket.onclose = (event) => {
-    if (isConnected) {
-      showError(`Rozłączono (Kod: ${event.code}, ${event.reason || 'Brak szczegółów'})`);
+ webSocket.onclose = (event) => {
+    if (isConnected && callMode !== "transferring") {
+      showError(`Rozłączono (Kod: ${event.code})`);
     }
   };
 }
+
+// Procedura transferu rozmowy z CPR (112) do Dyspozytora Medycznego (999)
+async function handleTransferTo999() {
+  clearTimeout(silenceTimer);
+
+  // Czekamy aż operator 112 dokończy wypowiadać zdanie o przełączeniu
+  let waitTime = 1000;
+  if (audioContext && nextStartTime > audioContext.currentTime) {
+    waitTime = (nextStartTime - audioContext.currentTime) * 1000 + 500;
+  }
+  await sleep(waitTime);
+
+  if (!isConnected) return;
+
+  // Zamykamy sesję z operatorem 112
+  if (webSocket) {
+    webSocket.onclose = null; // Unikamy fałszywego komunikatu o rozłączeniu
+    webSocket.close();
+    webSocket = null;
+  }
+
+  // 1-sekundowa pauza, a następnie jednorazowe odtworzenie zapowiedzi czekaj.mp3
+  await sleep(1000);
+  if (!isConnected) return;
+
+  await playWaitMessageSequence("czekaj.mp3", 1, 1, "Dyspozytorem Medycznym 999");
+
+  if (!isConnected) return;
+
+  // Rozpoczęcie właściwej rozmowy medycznej 999 z zachowaniem danych AED i wytycznych
+  const prompt999 = `${savedMedicalContext.systemPrompt}\n\n[KONTEKST]: Świadek został przełączony z numeru 112 od operatora CPR. Odbierz połączenie jako Dyspozytor Medyczny 999 słowami: "Dyspozytor medyczny 999, słucham, przejąłem formatkę zgłoszenia. Proszę potwierdzić adres i podać stan poszkodowanego."`;
+  await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
+}
+
+// 7. Przesyłanie strumienia głosu z mikrofonu
+function startAudioStreaming() {
 
 // 7. Przesyłanie strumienia głosu z mikrofonu
 function startAudioStreaming() {
