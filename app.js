@@ -248,8 +248,13 @@ function startAudioStreaming() {
 }
 
 // 7. Odtwarzanie głosu dyspozytora
+// Płynny bufor odtwarzania z ochroną przed jitterem
 let nextStartTime = 0;
+const BUFFER_DELAY = 0.12; // 120ms bufora wygładzającego
+
 function playAudioChunk(base64Data) {
+  if (!audioContext) return;
+
   const binaryString = atob(base64Data);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
@@ -270,13 +275,15 @@ function playAudioChunk(base64Data) {
   source.connect(audioContext.destination);
 
   const currentTime = audioContext.currentTime;
+
+  // Jeśli bufor wypadł z rytmu (przerwa w sieci), zresetuj czas z małym marginesem
   if (nextStartTime < currentTime) {
-    nextStartTime = currentTime;
+    nextStartTime = currentTime + BUFFER_DELAY;
   }
+
   source.start(nextStartTime);
   nextStartTime += audioBuffer.duration;
 }
-
 // 8. Zakończenie połączenia
 function endCall() {
   isConnected = false;
