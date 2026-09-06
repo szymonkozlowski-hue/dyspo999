@@ -26,16 +26,26 @@ let savedMedicalContext = {
   detectedModel: "" 
 };
 
-// ==========================================
 // 1. WERYFIKACJA HASŁA STACJI (AUTH)
 // ==========================================
 function checkAuth() {
-  const entered = document.getElementById("pass-input").value;
-  if (entered === CONFIG.STATION_PASSWORD) {
+  if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
+    alert("Błąd: Plik config.js nie został załadowany lub brak parametru STATION_PASSWORD!");
+    return;
+  }
+
+  const inputEl = document.getElementById("pass-input");
+  const entered = inputEl.value.trim(); // Obcina przypadkowe spacje z klawiatury mobilnej
+  const expected = String(CONFIG.STATION_PASSWORD).trim(); // Konwertuje na string w razie zapisu numerycznego
+
+  if (entered === expected) {
+    document.getElementById("auth-error").style.display = "none";
     sessionStorage.setItem("station_auth", "true");
     showPhone();
   } else {
     document.getElementById("auth-error").style.display = "block";
+    inputEl.value = "";
+    inputEl.focus();
   }
 }
 
