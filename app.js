@@ -4,7 +4,7 @@ let webSocket = null;
 let audioContext = null;
 let mediaStream = null;
 let audioProcessor = null;
-let wakeLock = null;0
+let wakeLock = null;
 
 // 1. Weryfikacja hasła stacji
 function checkAuth() {
@@ -48,6 +48,7 @@ function updateDisplay() {
 }
 
 function showError(msg) {
+  releaseWakeLock(); // Zwalnia blokadę przy błędzie
   const status = document.getElementById("call-status");
   status.innerText = msg;
   status.style.color = "#f87171";
@@ -555,7 +556,7 @@ function endCall() {
   releaseWakeLock(); // Pozwala na ponowne wygaszanie ekranu
 }
 document.addEventListener('visibilitychange', async () => {
-  if (wakeLock !== null && document.visibilityState === 'visible' && isConnected) {
+  if (document.visibilityState === 'visible' && isConnected) {
     await requestWakeLock();
   }
 });
