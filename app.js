@@ -1,39 +1,3 @@
-async function checkAvailableModels() {
-  const status = document.getElementById("call-status");
-  status.innerText = "Sprawdzam obsługiwane modele...";
-  status.style.color = "#fbbf24";
-
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
-    const data = await res.json();
-
-    if (data.error) {
-      showError("Błąd klucza API: " + data.error.message);
-      return;
-    }
-
-    // Filtrujemy modele wspierające bidiGenerateContent (połączenie na żywo)
-    const bidiModels = data.models
-      .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
-      .map(m => m.name);
-
-    if (bidiModels.length > 0) {
-      status.innerText = "Dostępny model: " + bidiModels[0];
-      status.style.color = "#4ade80";
-      console.log("Obsługiwane modele Bidi:", bidiModels);
-      return bidiModels[0];
-    } else {
-      showError("Twój klucz nie ma jeszcze dostępu do modeli Live (BidiGenerateContent).");
-      console.log("Wszystkie modele dla klucza:", data.models.map(m => m.name));
-      return null;
-    }
-  } catch (err) {
-    showError("Błąd sieci przy pobieraniu modeli: " + err.message);
-    return null;
-  }
-}
-
-
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
@@ -41,6 +5,7 @@ let audioContext = null;
 let mediaStream = null;
 let audioProcessor = null;
 
+// 1. Weryfikacja hasła stacji
 function checkAuth() {
   const entered = document.getElementById("pass-input").value;
   if (entered === CONFIG.STATION_PASSWORD) {
@@ -62,6 +27,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// 2. Obsługa klawiatury numerycznej
 function pressKey(digit) {
   if (isConnected) return;
   if (currentNumber.length < 5) {
@@ -89,36 +55,79 @@ function showError(msg) {
   isConnected = false;
 }
 
+// 3. Dynamiczne wykrycie obsługiwanego modelu Live API
+async function checkAvailableModels() {
+  const status = document.getElementById("call-status");
+  status.innerText = "Weryfikacja modeli Live API...";
+  status.style.color = "#fbbf24";
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
+    const data = await res.json();
+
+    if (data.error) {
+      showError("Błąd klucza Google API: " + data.error.message);
+      return null;
+    }
+
+    if (!data.models || !Array.isArray(data.models)) {
+      showError("Nieoczekiwana odpowiedź API podczas pobierania modeli.");
+      return null;
+    }
+
+    // Szukamy modeli ze wsparciem dla protokołu bidiGenerateContent
+    const bidiModels = data.models
+      .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"))
+      .map(m => m.name);
+
+    if (bidiModels.length > 0) {
+      console.log("Znalezione modele Bidi:", bidiModels);
+      // Preferowany model flash/realtime jeśli dostępny, w przeciwnym razie pierwszy dostępny
+      const preferred = bidiModels.find(m => m.includes("flash")) || bidiModels[0];
+      return preferred;
+    } else {
+      showError("Twój klucz nie ma włączonej obsługi dwukierunkowego Live API (BidiGenerateContent).");
+      return null;
+    }
+  } catch (err) {
+    showError("Błąd sieci podczas sprawdzania modeli: " + err.message);
+    return null;
+  }
+}
+
+// 4. Rozpoczęcie połączenia
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
     showError("Niepoprawny numer. Wybierz 999 lub 112.");
     return;
   }
 
-  // Weryfikacja czy wklejono poprawny klucz API
   if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY.includes("TUTAJ_WKLEJ")) {
-    showError("BŁĄD: W pliku config.js brakuje Twojego klucza Gemini API!");
+    showError("BŁĄD: W pliku config.js brakuje klucza Gemini API!");
     return;
   }
 
-  const status = document.getElementById("call-status");
-  status.innerText = "Łączenie z 999...";
-  status.style.color = "#fbbf24";
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
 
+  const detectedModel = await checkAvailableModels();
+  if (!detectedModel) return;
+
   try {
     const rulesRes = await fetch("procedury.txt");
     const systemPrompt = await rulesRes.text();
-    await initLiveConnection(systemPrompt);
+    await initLiveConnection(systemPrompt, detectedModel);
   } catch (err) {
     showError("Błąd inicjalizacji: " + err.message);
   }
 }
 
-async function initLiveConnection(instructions) {
+// 5. Połączenie WebSocket z Gemini Live
+async function initLiveConnection(instructions, modelName) {
   const status = document.getElementById("call-status");
+  status.innerText = `Łączenie z modelem: ${modelName.replace('models/', '')}...`;
+  status.style.color = "#fbbf24";
 
   try {
     audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
@@ -140,39 +149,30 @@ async function initLiveConnection(instructions) {
       } 
     });
   } catch (e) {
-    showError("Brak uprawnień do mikrofonu!");
+    showError("Brak uprawnień do mikrofonu. Zezwól na dostęp!");
     return;
   }
 
-  // Oficjalny endpoint Gemini Bidi WebSocket
   const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
-
   webSocket = new WebSocket(uri);
 
   webSocket.onopen = () => {
     status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
     status.style.color = "#4ade80";
 
-    // Standardowa konfiguracja sesji
     const setupMessage = {
       setup: {
-        model: "models/gemini-2.0-flash",
+        model: modelName,
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: "Puck"
-              }
+              prebuiltVoiceConfig: { voiceName: "Puck" }
             }
           }
         },
         systemInstruction: {
-          parts: [
-            {
-              text: instructions
-            }
-          ]
+          parts: [{ text: instructions }]
         }
       }
     };
@@ -198,13 +198,13 @@ async function initLiveConnection(instructions) {
         }
       }
     } catch (err) {
-      console.error("Błąd parsowania:", err);
+      console.error("Błąd parsowania odpowiedzi:", err);
     }
   };
 
   webSocket.onerror = (err) => {
     console.error("WebSocket error:", err);
-    showError("Błąd połączenia WebSocket.");
+    showError("Błąd gniazda WebSocket.");
   };
 
   webSocket.onclose = (event) => {
@@ -214,6 +214,7 @@ async function initLiveConnection(instructions) {
   };
 }
 
+// 6. Przesyłanie strumienia głosu z mikrofonu
 function startAudioStreaming() {
   const inputAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
   const source = inputAudioCtx.createMediaStreamSource(mediaStream);
@@ -246,6 +247,7 @@ function startAudioStreaming() {
   };
 }
 
+// 7. Odtwarzanie głosu dyspozytora
 let nextStartTime = 0;
 function playAudioChunk(base64Data) {
   const binaryString = atob(base64Data);
@@ -275,6 +277,7 @@ function playAudioChunk(base64Data) {
   nextStartTime += audioBuffer.duration;
 }
 
+// 8. Zakończenie połączenia
 function endCall() {
   isConnected = false;
   currentNumber = "";
