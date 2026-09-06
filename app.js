@@ -430,6 +430,11 @@ async function initLiveConnection(instructions, modelName) {
     status.style.color = "#4ade80";
 resetSilenceTimer();
    
+   // Losowanie głosu dyspozytora przy każdym połączeniu (kobiecy / męski)
+    const availableVoices = ["Aoede", "Fenrir"];
+    const chosenVoice = availableVoices[Math.floor(Math.random() * availableVoices.length)];
+    console.log("Wylosowany dyspozytor, głos:", chosenVoice);
+
     const setupMessage = {
       setup: {
         model: modelName,
@@ -437,7 +442,7 @@ resetSilenceTimer();
           responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Puck" }
+              prebuiltVoiceConfig: { voiceName: chosenVoice }
             }
           }
         },
@@ -543,7 +548,7 @@ function startAudioStreaming() {
 
 // 8. Odtwarzanie głosu dyspozytora
 let nextStartTime = 0;
-const BUFFER_DELAY = 0.12;
+const BUFFER_DELAY = 0.25; // Zwiększony bufor zapobiegający gubieniu początków słów
 
 function playAudioChunk(base64Data) {
   if (!audioContext) return;
@@ -569,7 +574,8 @@ function playAudioChunk(base64Data) {
 
   const currentTime = audioContext.currentTime;
 
-  if (nextStartTime < currentTime) {
+  // Jeśli bufor się opróżnił, dajemy margines 250ms na stabilne zbuforowanie pakietów
+  if (nextStartTime <= currentTime) {
     nextStartTime = currentTime + BUFFER_DELAY;
   }
 
