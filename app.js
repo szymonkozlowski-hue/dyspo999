@@ -430,10 +430,20 @@ async function initLiveConnection(instructions, modelName) {
     status.style.color = "#4ade80";
 resetSilenceTimer();
    
-   // Losowanie głosu dyspozytora przy każdym połączeniu (kobiecy / męski)
-    const availableVoices = ["Aoede", "Fenrir"];
-    const chosenVoice = availableVoices[Math.floor(Math.random() * availableVoices.length)];
-    console.log("Wylosowany dyspozytor, głos:", chosenVoice);
+   // Definicja profili dyspozytorów z pewnymi głosami
+    const dispatchers = [
+      { 
+        voice: "Kore", // Wyrazisty, pewny głos kobiecy
+        intro: "Odbierasz połączenie 999. Jesteś kobietą — dyspozytorką medyczną. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia." 
+      },
+      { 
+        voice: "Fenrir", // Spokojny, niski głos męski
+        intro: "Odbierasz połączenie 999. Jesteś mężczyzną — dyspozytorem medycznym. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora i zapytaj o adres zdarzenia." 
+      }
+    ];
+
+    const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
+    console.log("Wylosowano dyspozytora:", currentDispatcher.voice);
 
     const setupMessage = {
       setup: {
@@ -442,7 +452,7 @@ resetSilenceTimer();
           responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: chosenVoice }
+              prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
             }
           }
         },
@@ -454,13 +464,13 @@ resetSilenceTimer();
 
     webSocket.send(JSON.stringify(setupMessage));
 
-    // Wymuszenie, by dyspozytor odezwał się natychmiast po odebraniu
+    // Wymuszenie odezwania się z uwzględnieniem płci w powitaniu
     webSocket.send(JSON.stringify({
       clientContent: {
         turns: [
           {
             role: "user",
-            parts: [{ text: "Odbierasz połączenie 999. Zgłoś się natychmiast regulaminowym powitaniem dyspozytora medycznego i zapytaj o adres zdarzenia." }]
+            parts: [{ text: currentDispatcher.intro }]
           }
         ],
         turnComplete: true
