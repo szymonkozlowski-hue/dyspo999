@@ -162,7 +162,8 @@ Każde pytanie zadawaj osobno (nie łącz kilku pytań w jednej frazie tak by ro
 
 a) w przypadku zgłoszenia z 999: 
 Poproś o podanie adresu miejsca zdarzenia (województwo, powiat, gmina, miejscowość, ulica, numer budynku, numer mieszkania, ewentualnie charakterystyczne punkty/obiekty lokalizacyjne, współrzędne geograficzne), 
-b)w przypadku połączenia z 112: Potwierdź/Zweryfikuj adres miejsca zdarzenia zawarty w formatce przesłanej przez operatora numerów 
+
+b)w przypadku połączenia przekazanego ze 112: Potwierdź/Zweryfikuj adres miejsca zdarzenia zawarty w formatce przesłanej przez operatora numerów 
 alarmowych; 
 3) potwierdź numer telefonu, zktórego dzwoni osoba wzywająca; 
 4) ustal co się stało? czy w miejscu zdarzenia jest bezpiecznie? kogo dotyczy zgłoszenie (dorosły/dziecko)? ile jest osób poszkodowanych?; 
