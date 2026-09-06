@@ -1,3 +1,11 @@
+/**
+ * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
+ * Architektura: Web Audio API + Gemini Live API (BidiGenerateContent) + OSM AED
+ */
+
+// ==========================================
+// ZMIENNE STANU I STAŁE SYSTEMOWE
+// ==========================================
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
@@ -6,9 +14,21 @@ let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
 let silenceTimer = null;
-const SILENCE_TIMEOUT_MS = 6000; // 6 sekund ciszy do pierwszej reakcji
 
-// 1. Weryfikacja hasła stacji
+// Buforowanie dźwięku i timery
+let nextStartTime = 0;
+const BUFFER_DELAY = 0.25;         // Bufor 250ms chroniący przed ucinaniem głosek
+const SILENCE_TIMEOUT_MS = 6000;   // 6 sekund ciszy do pierwszej reakcji dyspozytora
+
+// Pamięć podręczna procedur i modelu na wypadek transferu z 112 do 999
+let savedMedicalContext = { 
+  systemPrompt: "", 
+  detectedModel: "" 
+};
+
+// ==========================================
+// 1. WERYFIKACJA HASŁA STACJI (AUTH)
+// ==========================================
 function checkAuth() {
   const entered = document.getElementById("pass-input").value;
   if (entered === CONFIG.STATION_PASSWORD) {
@@ -30,7 +50,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 2. Obsługa klawiatury numerycznej
+// ==========================================
+// 2. KLAWIATURA I INTERFEJS UŻYTKOWNIKA
+// ==========================================
 function pressKey(digit) {
   if (isConnected) return;
   if (currentNumber.length < 5) {
@@ -50,42 +72,47 @@ function updateDisplay() {
 }
 
 function showError(msg) {
-  clearTimeout(silenceTimer); // Zwalnia timer ciszy przy błędzie
-  releaseWakeLock(); // Zwalnia blokadę przy błędzie
+  clearTimeout(silenceTimer);
+  releaseWakeLock();
+  
   const status = document.getElementById("call-status");
   status.innerText = msg;
   status.style.color = "#f87171";
+  
   document.getElementById("call-btn").style.display = "flex";
   document.getElementById("hangup-btn").style.display = "none";
   isConnected = false;
 }
 
+// ==========================================
+// 3. MONITOROWANIE CISZY (SILENCE DETECTOR)
+// ==========================================
 function resetSilenceTimer() {
   clearTimeout(silenceTimer);
   if (!isConnected) return;
 
-  // Obliczamy ile milisekund będzie jeszcze mówił dyspozytor
+  // Odliczamy ciszę dopiero po tym, jak dyspozytor skończy wypowiadać frazę
   let remainingSpeakingTime = 0;
   if (audioContext && nextStartTime > audioContext.currentTime) {
     remainingSpeakingTime = (nextStartTime - audioContext.currentTime) * 1000;
   }
 
-  // Czas ciszy (6s) zaczyna płynąć dopiero po zakończeniu mowy dyspozytora
   silenceTimer = setTimeout(() => {
     triggerSilencePrompt();
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
 }
+
 function triggerSilencePrompt() {
   if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
 
-  console.log("Wykryto ciszę – ponaglam dyspozytora.");
+  console.log("Wykryto brak odpowiedzi — wymuszenie ponaglenia ze strony dyspozytora.");
 
   webSocket.send(JSON.stringify({
     clientContent: {
       turns: [
         {
           role: "user",
-          parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem jako dyspozytor medyczny 999: zapytaj halo czy mnie słychać i ponów pytanie!" }]
+          parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem jako dyspozytor: zawołaj halo czy mnie słychać i ponów swoje pytanie!" }]
         }
       ],
       turnComplete: true
@@ -93,28 +120,38 @@ function triggerSilencePrompt() {
   }));
 }
 
-// Blokada wygaszania ekranu
+// ==========================================
+// 4. BLOKADA WYGASZANIA EKRANU (WAKE LOCK)
+// ==========================================
 async function requestWakeLock() {
   try {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
-      console.log("Ekran zablokowany przed wygaszeniem.");
+      console.log("Ekran zabezpieczony przed wygaszeniem.");
     }
   } catch (err) {
     console.warn(`Błąd Wake Lock: ${err.name}, ${err.message}`);
   }
 }
 
-// Zwolnienie blokady ekranu
 function releaseWakeLock() {
   if (wakeLock !== null) {
     wakeLock.release().then(() => {
       wakeLock = null;
-      console.log("Blokada wygaszania ekranu zwolniona.");
+      console.log("Blokada wygaszania zwolniona.");
     });
   }
 }
-// 3. Pobieranie GPS i wyszukiwanie realnych AED z OpenStreetMap (Wariant B)
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && isConnected) {
+    await requestWakeLock();
+  }
+});
+
+// ==========================================
+// 5. GEOLOKALIZACJA I BAZA POBIERANIA AED
+// ==========================================
 function getUserLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
@@ -125,10 +162,10 @@ function getUserLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        console.log(`Pobrano GPS: lat=${pos.coords.latitude}, lon=${pos.coords.longitude}, dokładność: ${Math.round(pos.coords.accuracy)}m`);
+        console.log(`GPS ustalony: lat=${pos.coords.latitude}, lon=${pos.coords.longitude}, dokładność: ${Math.round(pos.coords.accuracy)}m`);
         resolve({ 
           lat: pos.coords.latitude, 
-          lon: pos.coords.longitude,
+          lon: pos.coords.longitude, 
           accuracy: pos.coords.accuracy 
         });
       },
@@ -137,14 +174,14 @@ function getUserLocation() {
         resolve(null);
       },
       { 
-        enableHighAccuracy: true, // Wymusza fizyczny moduł GPS zamiast przybliżenia po IP
-        timeout: 8000,            // Daje telefonowi do 8s na złapanie fixa z satelitów
-        maximumAge: 0             // Nie korzysta z przestarzałej lokalizacji z pamięci podręcznej
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 0
       }
     );
   });
 }
-// Pomocnicze obliczanie dystansu w metrach
+
 function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const φ1 = lat1 * Math.PI / 180;
@@ -160,7 +197,6 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 
-// Pomocnicza funkcja: Odwrócone geokodowanie (OSM Nominatim)
 async function reverseGeocode(lat, lon) {
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`, {
@@ -176,7 +212,7 @@ async function reverseGeocode(lat, lon) {
     if (road) {
       return `${road}${house}${city ? `, ${city}` : ""}`;
     }
-    return data.display_name?.split(",").slice(0, 2).join(",") || "Adres wg mapy";
+    return data.display_name?.split(",").slice(0, 2).join(",") || "Adres z mapy";
   } catch (err) {
     console.warn("Błąd Reverse Geocoding:", err);
     return null;
@@ -198,12 +234,9 @@ async function fetchNearbyAEDs(lat, lon) {
     
     const data = await res.json();
     const elements = data.elements || [];
-
-    // Maksymalny zasięg pieszego biegu po aparat (np. 800 metrów)
-    const MAX_DISTANCE = 800;
-
-    // Szybki wstępny filtr współrzędnych (delta ok. 1.2 km)
+    const MAX_DISTANCE = 800; // Maksymalny promień poszukiwania pieszego (metry)
     const roughDelta = 0.012;
+
     const candidates = elements
       .filter(el => {
         const elLat = el.lat || el.center?.lat;
@@ -231,30 +264,22 @@ async function fetchNearbyAEDs(lat, lon) {
     }
 
     status.innerText = `Pobieranie adresu najbliższego AED...`;
-
-    // Przetwarzamy do 3 najbliższych punktów
     const topCandidates = candidates.slice(0, 3);
     const resolvedPoints = [];
 
     for (let i = 0; i < topCandidates.length; i++) {
       const item = topCandidates[i];
       const tags = item.el.tags || {};
-
-      // 1. Nazwa obiektu
       const placeName = tags["name"] || tags["operator"] || "Budynek użyteczności publicznej / obiekt komercyjny";
-
-      // 2. Opis umiejscowienia
       const placementDesc = tags["defibrillator:location"] || tags["description"] || "na ścianie / przy wejściu głównym";
-
-      // 3. Adres z tagów OSM lub z Reverse Geocoding
+      
       let address = "";
       if (tags["addr:street"]) {
         address = `ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}`.trim();
         if (tags["addr:city"]) address += `, ${tags["addr:city"]}`;
       } else {
-        // Jeśli nie ma adresu w tagach, dociągamy go przez Reverse Geocoding
         const fetchedAddress = await reverseGeocode(item.lat, item.lon);
-        address = fetchedAddress ? fetchedAddress : "współrzędne obiektu w terenie";
+        address = fetchedAddress ? fetchedAddress : "współrzędne terenu";
       }
 
       resolvedPoints.push({
@@ -267,9 +292,8 @@ async function fetchNearbyAEDs(lat, lon) {
     }
 
     status.innerText = `Znaleziono AED w pobliżu!`;
-
     const formattedList = resolvedPoints.map(p => 
-      `PUNKT ${p.num}${p.num === 1 ? ' (Najbliższy)' : ''}: Odległość: ok. ${p.distance} m | Adres: ${p.address} | Nazwa obiektu: ${p.placeName} | Dokładne umiejscowienie aparatu: ${p.placementDesc}`
+      `PUNKT ${p.num}${p.num === 1 ? ' (Najbliższy)' : ''}: Odległość: ok. ${p.distance} m | Adres: ${p.address} | Nazwa: ${p.placeName} | Dokładne miejsce: ${p.placementDesc}`
     ).join("\n");
 
     return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${formattedList}`;
@@ -281,7 +305,9 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-// 4. Dynamiczne wykrycie obsługiwanego modelu Live API
+// ==========================================
+// 6. WERYFIKACJA MODELI GEMINI LIVE API
+// ==========================================
 async function checkAvailableModels() {
   const status = document.getElementById("call-status");
   status.innerText = "Weryfikacja modeli Live API...";
@@ -301,8 +327,7 @@ async function checkAvailableModels() {
       .map(m => m.name);
 
     if (bidiModels && bidiModels.length > 0) {
-      const preferred = bidiModels.find(m => m.includes("flash")) || bidiModels[0];
-      return preferred;
+      return bidiModels.find(m => m.includes("flash")) || bidiModels[0];
     } else {
       showError("Twój klucz nie ma włączonej obsługi dwukierunkowego Live API.");
       return null;
@@ -313,10 +338,12 @@ async function checkAvailableModels() {
   }
 }
 
-// Pomocnicza funkcja do opóźnień
+// Pomocnik opóźnień
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Odtwarzanie zapowiedzi IVR z obsługą różnych plików i liczby powtórzeń
+// ==========================================
+// 7. ZAPOWIEDZI IVR (CZEKAJ NA POŁĄCZENIE)
+// ==========================================
 async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "centralą 999") {
   const status = document.getElementById("call-status");
   const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
@@ -343,10 +370,9 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
   }
 }
 
-/// Globalny kontekst medyczny zachowywany przy przełączaniu
-let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
-
-// 5. Rozpoczęcie połączenia
+// ==========================================
+// 8. ROZPOCZĘCIE POŁĄCZENIA (999 / 112)
+// ==========================================
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
     showError("Niepoprawny numer. Wybierz 999 lub 112.");
@@ -357,14 +383,15 @@ async function startCall() {
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
+  nextStartTime = 0;
   await requestWakeLock();
 
-  // Konfiguracja zapowiedzi: 112 gra czekajcpr.mp3 (2-4 razy), 999 gra czekaj.mp3 (2-3 razy)
+  // Konfiguracja IVR: 112 odtwarza czekajcpr.mp3 (2-4 razy), 999 odtwarza czekaj.mp3 (2-3 razy)
   const ivrPromise = is112 
     ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)")
     : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
 
-  // Równoległe przygotowanie danych GPS, AED i procedur
+  // Równoległe pobranie GPS, bazy AED i reguł
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = "";
@@ -394,20 +421,20 @@ async function startCall() {
     return;
   }
 
-  // Zapisujemy pełny prompt dyspozytora na wypadek późniejszego przełączenia z 112
+  // Zapisujemy kontekst medyczny na potrzeby późniejszego przekierowania z 112
   savedMedicalContext = setupData;
 
   if (is112) {
-    // Start rozmowy z operatorem CPR
     const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR. Zgłoś się natychmiast, zbierz wstępne dane i po ich zebraniu powiedz o przełączeniu do dyspozytora medycznego oraz dodaj kod [PRZEŁĄCZ_DO_999].`;
     await initLiveConnection(cprPrompt, setupData.detectedModel, "cpr");
   } else {
-    // Bezpośredni start z dyspozytorem medycznym 999
     await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
   }
 }
 
-// 6. Połączenie WebSocket z Gemini Live
+// ==========================================
+// 9. POŁĄCZENIE WEBSOCKET Z GEMINI LIVE
+// ==========================================
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   const status = document.getElementById("call-status");
   status.innerText = callMode === "cpr" ? "Łączenie z operatorem 112..." : "Łączenie z dyspozytorem 999...";
@@ -450,6 +477,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       : "Połączenie 999 odebrane. Dyspozytor na linii...";
     status.style.color = "#4ade80";
 
+    // Pula głosów (kobieta / mężczyzna)
     const dispatchers = [
       { 
         voice: "Kore", 
@@ -484,9 +512,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
     webSocket.send(JSON.stringify(setupMessage));
 
-    // Odpowiedni wstęp w zależności od tego, kto odbiera (CPR czy 999)
+    // Narzucenie natychmiastowego zgłoszenia
     const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
-
     webSocket.send(JSON.stringify({
       clientContent: {
         turns: [
@@ -518,9 +545,9 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
             playAudioChunk(part.inlineData.data);
           }
 
-          // Wykrycie decyzji operatora 112 o przekierowaniu do Dyspozytora Medycznego
+          // Wykrycie kodu zakończenia wywiadu przez operatora CPR
           if (part.text && part.text.includes("PRZEŁĄCZ_DO_999") && callMode === "cpr") {
-            console.log("Operator CPR kończy wywiad. Przełączanie do 999...");
+            console.log("Operator CPR kończy wywiad wstępny. Następuje transfer do 999...");
             handleTransferTo999();
             return;
           }
@@ -528,7 +555,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
     } catch (err) {
-      console.error("Błąd parsowania:", err);
+      console.error("Błąd parsowania pakietu WebSocket:", err);
     }
   };
 
@@ -537,18 +564,20 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     showError("Błąd gniazda WebSocket.");
   };
 
- webSocket.onclose = (event) => {
+  webSocket.onclose = (event) => {
     if (isConnected && callMode !== "transferring") {
       showError(`Rozłączono (Kod: ${event.code})`);
     }
   };
 }
 
-// Procedura transferu rozmowy z CPR (112) do Dyspozytora Medycznego (999)
+// ==========================================
+// 10. TRANSFER POŁĄCZENIA: CPR (112) -> 999
+// ==========================================
 async function handleTransferTo999() {
   clearTimeout(silenceTimer);
 
-  // Czekamy aż operator 112 dokończy wypowiadać zdanie o przełączeniu
+  // Czekamy na dokończenie frazy operatora 112 o przełączeniu
   let waitTime = 1000;
   if (audioContext && nextStartTime > audioContext.currentTime) {
     waitTime = (nextStartTime - audioContext.currentTime) * 1000 + 500;
@@ -557,14 +586,14 @@ async function handleTransferTo999() {
 
   if (!isConnected) return;
 
-  // Zamykamy sesję z operatorem 112
+  // Zamykamy sesję CPR bez wywoływania komunikatu błędu
   if (webSocket) {
-    webSocket.onclose = null; // Unikamy fałszywego komunikatu o rozłączeniu
+    webSocket.onclose = null;
     webSocket.close();
     webSocket = null;
   }
 
-  // 1-sekundowa pauza, a następnie jednorazowe odtworzenie zapowiedzi czekaj.mp3
+  // 1-sekundowa pauza, a potem pojedynczy sygnał czekaj.mp3
   await sleep(1000);
   if (!isConnected) return;
 
@@ -572,16 +601,21 @@ async function handleTransferTo999() {
 
   if (!isConnected) return;
 
-  // Rozpoczęcie właściwej rozmowy medycznej 999 z zachowaniem danych AED i wytycznych
+  // Start właściwej sesji medycznej
+  nextStartTime = 0;
   const prompt999 = `${savedMedicalContext.systemPrompt}\n\n[KONTEKST]: Świadek został przełączony z numeru 112 od operatora CPR. Odbierz połączenie jako Dyspozytor Medyczny 999 słowami: "Dyspozytor medyczny 999, słucham, przejąłem formatkę zgłoszenia. Proszę potwierdzić adres i podać stan poszkodowanego."`;
   await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
 }
 
-// 7. Przesyłanie strumienia głosu z mikrofonu
+// ==========================================
+// 11. STRUMIENIOWANIE AUDIO Z MIKROFONU
+// ==========================================
 function startAudioStreaming() {
+  if (audioProcessor) {
+    audioProcessor.disconnect();
+    audioProcessor = null;
+  }
 
-// 7. Przesyłanie strumienia głosu z mikrofonu
-function startAudioStreaming() {
   const inputAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
   const source = inputAudioCtx.createMediaStreamSource(mediaStream);
   
@@ -593,14 +627,15 @@ function startAudioStreaming() {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
     
     const inputData = e.inputBuffer.getChannelData(0);
-    // Sprawdzenie czy użytkownik mówi (przekroczenie progu szumu)
-  let sum = 0;
-  for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
-  const rms = Math.sqrt(sum / inputData.length);
-  if (rms > 0.05) {
-    // Kursant mówi – resetujemy licznik ciszy
-    resetSilenceTimer();
-  }
+    
+    // Voice Activity Detection (próg RMS 0.05 odcina szum tła)
+    let sum = 0;
+    for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
+    const rms = Math.sqrt(sum / inputData.length);
+    if (rms > 0.05) {
+      resetSilenceTimer();
+    }
+
     const pcm16 = new Int16Array(inputData.length);
     for (let i = 0; i < inputData.length; i++) {
       pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7fff;
@@ -621,10 +656,9 @@ function startAudioStreaming() {
   };
 }
 
-// 8. Odtwarzanie głosu dyspozytora
-let nextStartTime = 0;
-const BUFFER_DELAY = 0.25; // Zwiększony bufor zapobiegający gubieniu początków słów
-
+// ==========================================
+// 12. ODTWARZANIE MOWY DYSPOZYTORA (BUFOR)
+// ==========================================
 function playAudioChunk(base64Data) {
   if (!audioContext) return;
 
@@ -649,7 +683,6 @@ function playAudioChunk(base64Data) {
 
   const currentTime = audioContext.currentTime;
 
-  // Jeśli bufor się opróżnił, dajemy margines 250ms na stabilne zbuforowanie pakietów
   if (nextStartTime <= currentTime) {
     nextStartTime = currentTime + BUFFER_DELAY;
   }
@@ -658,14 +691,18 @@ function playAudioChunk(base64Data) {
   nextStartTime += audioBuffer.duration;
 }
 
-// 9. Zakończenie połączenia
+// ==========================================
+// 13. ZAKOŃCZENIE POŁĄCZENIA
+// ==========================================
 function endCall() {
   clearTimeout(silenceTimer);
   isConnected = false;
   currentNumber = "";
+  nextStartTime = 0;
   updateDisplay();
 
   if (webSocket) {
+    webSocket.onclose = null;
     webSocket.close();
     webSocket = null;
   }
@@ -681,12 +718,8 @@ function endCall() {
   const status = document.getElementById("call-status");
   status.innerText = "Połączenie zakończone.";
   status.style.color = "#9ca3af";
+  
   document.getElementById("call-btn").style.display = "flex";
   document.getElementById("hangup-btn").style.display = "none";
-  releaseWakeLock(); // Pozwala na ponowne wygaszanie ekranu
+  releaseWakeLock();
 }
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && isConnected) {
-    await requestWakeLock();
-  }
-});
