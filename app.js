@@ -498,34 +498,43 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
     const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-    const setupMessage = {
-      setup: {
-        model: modelName,
-        generationConfig: {
-          responseModalities: ["AUDIO"], 
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
-            }
+    // 1. Bazowa konfiguracja (bez pustych tablic narzędzi)
+    const setupPayload = {
+      model: modelName,
+      generationConfig: {
+        responseModalities: ["AUDIO"], 
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
           }
-        },
-        systemInstruction: {
-          parts: [{ text: instructions }]
-        },
-        // Wirtualny przycisk wywoływany przez sztuczną inteligencję
-        tools: (callMode === "cpr") ? [
-          {
-            functionDeclarations: [
-              {
-                name: "przelacz_do_dyspozytora_999",
-                description: "Wywołaj tę funkcję BEZWZGLĘDNIE, gdy tylko dowiesz się, gdzie jest zdarzenie i co się stało. Nie pytaj o stan zdrowia. Po prostu użyj tej funkcji, aby przekazać rozmowę do medyka."
-              }
-            ]
-          }
-        ] : []
+        }
+      },
+      systemInstruction: {
+        parts: [{ text: instructions }]
       }
     };
 
+    // 2. Narzędzie dodajemy TYLKO dla operatora 112 (z wymaganym blokiem parameters)
+    if (callMode === "cpr") {
+      setupPayload.tools = [
+        {
+          functionDeclarations: [
+            {
+              name: "przelacz_do_dyspozytora_999",
+              description: "Wywołaj tę funkcję BEZWZGLĘDNIE, gdy tylko dowiesz się, gdzie jest zdarzenie i co się stało. Nie pytaj o stan zdrowia. Po prostu użyj tej funkcji, aby przekazać rozmowę do medyka.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  powod: { type: "STRING", description: "Powód przekazania rozmowy" }
+                }
+              }
+            }
+          ]
+        }
+      ];
+    }
+
+    const setupMessage = { setup: setupPayload };
     webSocket.send(JSON.stringify(setupMessage));
 
     const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
