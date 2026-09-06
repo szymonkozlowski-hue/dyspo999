@@ -84,7 +84,6 @@ async function startCall() {
 async function initLiveConnection(instructions) {
   const status = document.getElementById("call-status");
 
-  // Inicjalizacja dźwięku
   try {
     audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
     if (audioContext.state === 'suspended') {
@@ -95,16 +94,22 @@ async function initLiveConnection(instructions) {
     return;
   }
 
-  // Sprawdzenie mikrofonu przed połączeniem
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        channelCount: 1,
+        sampleRate: 16000,
+        echoCancellation: true,
+        noiseSuppression: true
+      } 
+    });
   } catch (e) {
-    showError("Brak dostępu do mikrofonu. Zezwól w przeglądarce!");
+    showError("Brak uprawnień do mikrofonu!");
     return;
   }
 
-  const host = "generativelanguage.googleapis.com";
-  const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
+  // Oficjalny endpoint Gemini Bidi WebSocket
+  const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
   webSocket = new WebSocket(uri);
 
@@ -112,6 +117,7 @@ async function initLiveConnection(instructions) {
     status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
     status.style.color = "#4ade80";
 
+    // Standardowa konfiguracja sesji
     const setupMessage = {
       setup: {
         model: "models/gemini-2.0-flash",
@@ -119,12 +125,18 @@ async function initLiveConnection(instructions) {
           responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Puck" }
+              prebuiltVoiceConfig: {
+                voiceName: "Puck"
+              }
             }
           }
         },
         systemInstruction: {
-          parts: [{ text: instructions }]
+          parts: [
+            {
+              text: instructions
+            }
+          ]
         }
       }
     };
@@ -150,17 +162,18 @@ async function initLiveConnection(instructions) {
         }
       }
     } catch (err) {
-      console.error("Błąd przetwarzania wiadomości:", err);
+      console.error("Błąd parsowania:", err);
     }
   };
 
   webSocket.onerror = (err) => {
-    showError("Błąd sieci WebSocket Gemini.");
+    console.error("WebSocket error:", err);
+    showError("Błąd połączenia WebSocket.");
   };
 
   webSocket.onclose = (event) => {
     if (isConnected) {
-      showError(`Rozłączono przez serwer (Kod: ${event.code}, Powód: ${event.reason || 'brak'})`);
+      showError(`Rozłączono (Kod: ${event.code}, ${event.reason || 'Brak szczegółów'})`);
     }
   };
 }
