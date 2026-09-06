@@ -1,6 +1,6 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API (BidiGenerateContent) + OSM AED
+ * Architektura: Web Audio API + Gemini Live API (BidiGenerateContent) + OSM AED + Function Calling
  */
 
 // ==========================================
@@ -26,6 +26,7 @@ let savedMedicalContext = {
   detectedModel: "" 
 };
 
+// ==========================================
 // 1. WERYFIKACJA HASŁA STACJI (AUTH)
 // ==========================================
 function checkAuth() {
@@ -35,8 +36,8 @@ function checkAuth() {
   }
 
   const inputEl = document.getElementById("pass-input");
-  const entered = inputEl.value.trim(); // Obcina przypadkowe spacje z klawiatury mobilnej
-  const expected = String(CONFIG.STATION_PASSWORD).trim(); // Konwertuje na string w razie zapisu numerycznego
+  const entered = inputEl.value.trim(); 
+  const expected = String(CONFIG.STATION_PASSWORD).trim(); 
 
   if (entered === expected) {
     document.getElementById("auth-error").style.display = "none";
@@ -101,7 +102,6 @@ function resetSilenceTimer() {
   clearTimeout(silenceTimer);
   if (!isConnected) return;
 
-  // Odliczamy ciszę dopiero po tym, jak dyspozytor skończy wypowiadać frazę
   let remainingSpeakingTime = 0;
   if (audioContext && nextStartTime > audioContext.currentTime) {
     remainingSpeakingTime = (nextStartTime - audioContext.currentTime) * 1000;
@@ -244,7 +244,7 @@ async function fetchNearbyAEDs(lat, lon) {
     
     const data = await res.json();
     const elements = data.elements || [];
-    const MAX_DISTANCE = 800; // Maksymalny promień poszukiwania pieszego (metry)
+    const MAX_DISTANCE = 800; 
     const roughDelta = 0.012;
 
     const candidates = elements
@@ -348,7 +348,6 @@ async function checkAvailableModels() {
   }
 }
 
-// Pomocnik opóźnień
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ==========================================
@@ -396,12 +395,10 @@ async function startCall() {
   nextStartTime = 0;
   await requestWakeLock();
 
-  // Konfiguracja IVR: 112 odtwarza czekajcpr.mp3 (2-4 razy), 999 odtwarza czekaj.mp3 (2-3 razy)
   const ivrPromise = is112 
     ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)")
     : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
 
-  // Równoległe pobranie GPS, bazy AED i reguł
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = "";
@@ -431,11 +428,10 @@ async function startCall() {
     return;
   }
 
-  // Zapisujemy kontekst medyczny na potrzeby późniejszego przekierowania z 112
   savedMedicalContext = setupData;
 
   if (is112) {
-    const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR. Zgłoś się natychmiast, zbierz wstępne dane i po ich zebraniu powiedz o przełączeniu do dyspozytora medycznego oraz dodaj kod [PRZEŁĄCZ_DO_999].`;
+    const cprPrompt = `${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR. Zgłoś się natychmiast, zbierz wstępne dane i po ich zebraniu powiedz o przełączeniu do dyspozytora medycznego.`;
     await initLiveConnection(cprPrompt, setupData.detectedModel, "cpr");
   } else {
     await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
@@ -487,7 +483,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       : "Połączenie 999 odebrane. Dyspozytor na linii...";
     status.style.color = "#4ade80";
 
-    // Pula głosów (kobieta / mężczyzna)
     const dispatchers = [
       { 
         voice: "Kore", 
@@ -503,11 +498,11 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
     const currentDispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
-   const setupMessage = {
+    const setupMessage = {
       setup: {
         model: modelName,
         generationConfig: {
-          responseModalities: ["AUDIO", "TEXT"], // AUDIO do mowy, TEXT do niezawodnego wykrywania słów kluczowych
+          responseModalities: ["AUDIO"], 
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: currentDispatcher.voice }
@@ -516,13 +511,23 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         },
         systemInstruction: {
           parts: [{ text: instructions }]
-        }
+        },
+        // Wirtualny przycisk wywoływany przez sztuczną inteligencję
+        tools: (callMode === "cpr") ? [
+          {
+            functionDeclarations: [
+              {
+                name: "przelacz_do_dyspozytora_999",
+                description: "Wywołaj tę funkcję BEZWZGLĘDNIE, gdy tylko dowiesz się, gdzie jest zdarzenie i co się stało. Nie pytaj o stan zdrowia. Po prostu użyj tej funkcji, aby przekazać rozmowę do medyka."
+              }
+            ]
+          }
+        ] : []
       }
     };
 
     webSocket.send(JSON.stringify(setupMessage));
 
-    // Narzucenie natychmiastowego zgłoszenia
     const initialPrompt = (callMode === "cpr") ? currentDispatcher.intro112 : currentDispatcher.intro999;
     webSocket.send(JSON.stringify({
       clientContent: {
@@ -540,7 +545,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     resetSilenceTimer();
   };
 
-  let isTransferring = false; // Zabezpieczenie przed podwójnym / przedwczesnym odpaleniem
+  let isTransferring = false;
 
   webSocket.onmessage = async (event) => {
     try {
@@ -551,31 +556,27 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         data = JSON.parse(event.data);
       }
 
+      // 1. Odtwarzanie głosu z głośnika
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
             playAudioChunk(part.inlineData.data);
           }
+        }
+        resetSilenceTimer();
+      }
 
-         // Wykrywanie momentu przekazania rozmowy przez CPR do 999
-          const textChunk = (part.text || "").toLowerCase();
-          if (
-            callMode === "cpr" && 
-            !isTransferring && 
-            (
-              textChunk.includes("przełącz") || 
-              textChunk.includes("przekazuj") || 
-              textChunk.includes("999") ||
-              textChunk.includes("formatk")
-            )
-          ) {
+      // 2. Nasłuchiwanie na wciśnięcie przycisku przez AI (Tool Call)
+      const functionCalls = data.toolCall?.functionCalls;
+      if (functionCalls && callMode === "cpr" && !isTransferring) {
+        for (const call of functionCalls) {
+          if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferring = true;
-            console.log("Wykryto zakończenie wywiadu CPR w tekście. Uruchamiam transfer do 999...");
+            console.log("Operator 112 wcisnął przycisk przełączenia. Inicjacja transferu!");
             handleTransferTo999();
             return;
           }
         }
-        resetSilenceTimer();
       }
     } catch (err) {
       console.error("Błąd parsowania pakietu WebSocket:", err);
@@ -651,7 +652,6 @@ function startAudioStreaming() {
     
     const inputData = e.inputBuffer.getChannelData(0);
     
-    // Voice Activity Detection (próg RMS 0.05 odcina szum tła)
     let sum = 0;
     for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
     const rms = Math.sqrt(sum / inputData.length);
