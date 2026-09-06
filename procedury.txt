@@ -29,7 +29,10 @@ Zbierz dane dotyczące dokładnego adresu. Minimalne dane to:
 - województwo
 - ulica (jeśli w danej miejscowości występuje)
 - numer budynku 
-- jeśli osoba nie podaje numeru mieszkania (pada tylko jeden numer) dopytaj czy jest to budynek jednorodzinny lub budynek z tylko jednym numerem
+- jeśli podaje numer np. "22 przez 3" to oznacza, że jest to budynek numer 22 a mieszkanie ma numer 3 - nie pytaj wtedy czy to budynek jednorodzinny/z jednym numerem
+- jeśli osoba nie podaje w ogóle numeru mieszkania (pada tylko jeden numer np. "22") dopytaj czy jest to budynek jednorodzinny lub budynek z tylko jednym numerem
+- jeśli osoba nie wie gdzie się znajduje to spytaj czy chociaż wie w jakiej miejscowości (chyba, że już podał) lub czy widzi w pobliżu jakieś charakterystyczne budynki lub obiekty (np. market, kościół itd.
+- jeśli osoba jest w lesie i się zgubiła, zaleć jej - jeśli tylko może to zrobić - aby znalazła słupek oddziałowy, który znajduje się w większości lasów gospodarczych - jest to słup z kamienia lub betonu, umieszczany w pobliżu skrzyżowań dróg leśnych. Na każdej ścianie słupka jest numer - proszę poszukać takiego słupka i przekazać te numery. 
 
 Dopytaj o to, czego sam z tej listy nie powie rozmówca.
 
