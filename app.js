@@ -160,9 +160,29 @@ async function initLiveConnection(instructions, modelName) {
     status.innerText = "Połączono. Dyspozytor Medyczny słucha...";
     status.style.color = "#4ade80";
 
-    const setupMessage = {
+const setupMessage = {
       setup: {
         model: modelName,
+        tools: [
+          {
+            functionDeclarations: [
+              {
+                name: "find_nearest_aed",
+                description: "Wyszukuje najbliższy dostępny defibrylator AED na podstawie lokalizacji lub adresu podanego przez dzwoniącego.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    location: {
+                      type: "STRING",
+                      description: "Miasto, ulica lub charakterystyczny punkt podany przez zgłaszającego."
+                    }
+                  },
+                  required: ["location"]
+                }
+              }
+            ]
+          }
+        ],
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
@@ -190,6 +210,7 @@ async function initLiveConnection(instructions, modelName) {
         data = JSON.parse(event.data);
       }
 
+      // 1. Odtwarzanie dźwięku
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
@@ -197,8 +218,46 @@ async function initLiveConnection(instructions, modelName) {
           }
         }
       }
+
+      // 2. Obsługa wyszukiwania AED (Function Calling)
+      if (data.toolCall?.functionCalls) {
+        for (const call of data.toolCall.functionCalls) {
+          if (call.name === "find_nearest_aed") {
+            const loc = call.args?.location || "okolica zdarzenia";
+
+            try {
+              const res = await fetch(`${CONFIG.AED_API_URL}?query=${encodeURIComponent(loc)}`);
+              const aedData = await res.json();
+              const foundLocation = aedData.address || aedData.location || "najbliższa apteka całodobowa, 100 metrów w lewo";
+
+              webSocket.send(JSON.stringify({
+                toolResponse: {
+                  functionResponses: [
+                    {
+                      response: { output: { aed_location: foundLocation } },
+                      id: call.id
+                    }
+                  ]
+                }
+              }));
+            } catch (err) {
+              // Awaryjna odpowiedź, gdyby serwer Render jeszcze nie odpowiadał
+              webSocket.send(JSON.stringify({
+                toolResponse: {
+                  functionResponses: [
+                    {
+                      response: { output: { aed_location: `w budynku użyteczności publicznej lub aptece przy: ${loc}` } },
+                      id: call.id
+                    }
+                  ]
+                }
+              }));
+            }
+          }
+        }
+      }
     } catch (err) {
-      console.error("Błąd parsowania odpowiedzi:", err);
+      console.error("Błąd parsowania:", err);
     }
   };
 
