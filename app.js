@@ -324,7 +324,7 @@ async function playWaitMessageSequence() {
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
 
-    status.innerText = `Łączenie z centralą 999... (${i + 1}/${repeatCount})`;
+    status.innerText = `Łączenie... (${i + 1}/${repeatCount})`;
     status.style.color = "#fbbf24";
 
     await new Promise((resolve) => {
