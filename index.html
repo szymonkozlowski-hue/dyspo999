@@ -172,7 +172,7 @@
     <div class="shield-icon">🚨</div>
     <h2>Stacja Treningowa 999</h2>
     <p style="color: #9ca3af; font-size: 14px; margin-top: 8px;">Wprowadź kod dostępu instruktora</p>
-    <input type="password" id="pass-input" class="auth-input" placeholder="Wpisz hasło stacji">
+    <input type="password" id="pass-input" class="auth-input" placeholder="Wpisz hasło stacji" onkeydown="if(event.key==='Enter') checkAuth()">
     <button class="auth-btn" onclick="checkAuth()">Odblokuj Stację</button>
     <div id="auth-error" class="error-msg">Nieprawidłowe hasło stacji</div>
   </div>
@@ -212,7 +212,7 @@
   </div>
 </div>
 
-<script src="config.js?v=226"></script>
-<script src="app.js?v=226"></script>
+<script src="config.js?v=227"></script>
+<script src="app.js?v=227"></script>
 </body>
 </html>
