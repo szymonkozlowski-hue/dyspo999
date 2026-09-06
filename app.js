@@ -219,40 +219,46 @@ const setupMessage = {
         }
       }
 
-      // 2. Obsługa wyszukiwania AED (Function Calling)
+     // 2. Obsługa wyszukiwania AED (Function Calling)
       if (data.toolCall?.functionCalls) {
         for (const call of data.toolCall.functionCalls) {
           if (call.name === "find_nearest_aed") {
-            const loc = call.args?.location || "okolica zdarzenia";
+            const loc = call.args?.location || "centrum miasta";
+            console.log("Model zapytał o AED dla lokalizacji:", loc);
 
-            try {
-              const res = await fetch(`${CONFIG.AED_API_URL}?query=${encodeURIComponent(loc)}`);
-              const aedData = await res.json();
-              const foundLocation = aedData.address || aedData.location || "najbliższa apteka całodobowa, 100 metrów w lewo";
+            let aedLocationText = `w holu głównym dworca lub aptece w pobliżu: ${loc}`;
 
-              webSocket.send(JSON.stringify({
-                toolResponse: {
-                  functionResponses: [
-                    {
-                      response: { output: { aed_location: foundLocation } },
-                      id: call.id
-                    }
-                  ]
+            // Jeśli serwer zewnętrzny jest skonfigurowany, odpytaj go
+            if (CONFIG.AED_API_URL && !CONFIG.AED_API_URL.includes("twoj-serwer")) {
+              try {
+                const res = await fetch(`${CONFIG.AED_API_URL}?query=${encodeURIComponent(loc)}`);
+                const aedData = await res.json();
+                if (aedData.address || aedData.location) {
+                  aedLocationText = aedData.address || aedData.location;
                 }
-              }));
-            } catch (err) {
-              // Awaryjna odpowiedź, gdyby serwer Render jeszcze nie odpowiadał
-              webSocket.send(JSON.stringify({
-                toolResponse: {
-                  functionResponses: [
-                    {
-                      response: { output: { aed_location: `w budynku użyteczności publicznej lub aptece przy: ${loc}` } },
-                      id: call.id
-                    }
-                  ]
-                }
-              }));
+              } catch (e) {
+                console.warn("Błąd backendu AED, używam lokalizacji domyślnej:", e);
+              }
             }
+
+            // Odesłanie odpowiedzi narzędzia do Gemini Live API
+            const toolReply = {
+              toolResponse: {
+                functionResponses: [
+                  {
+                    response: {
+                      output: {
+                        nearest_aed_address: aedLocationText
+                      }
+                    },
+                    id: call.id
+                  }
+                ]
+              }
+            };
+
+            console.log("Wysyłam odpowiedź narzędzia:", toolReply);
+            webSocket.send(JSON.stringify(toolReply));
           }
         }
       }
