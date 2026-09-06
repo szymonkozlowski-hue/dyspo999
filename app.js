@@ -59,16 +59,29 @@ function showError(msg) {
 function getUserLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
+      console.warn("Geolokalizacja niedostępna w przeglądarce.");
       resolve(null);
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      (pos) => {
+        console.log(`Pobrano GPS: lat=${pos.coords.latitude}, lon=${pos.coords.longitude}, dokładność: ${Math.round(pos.coords.accuracy)}m`);
+        resolve({ 
+          lat: pos.coords.latitude, 
+          lon: pos.coords.longitude,
+          accuracy: pos.coords.accuracy 
+        });
+      },
       (err) => {
-        console.warn("Brak dostępu do GPS:", err.message);
+        console.warn("Błąd GPS:", err.message);
         resolve(null);
       },
-      { timeout: 4000, maximumAge: 60000 }
+      { 
+        enableHighAccuracy: true, // Wymusza fizyczny moduł GPS zamiast przybliżenia po IP
+        timeout: 8000,            // Daje telefonowi do 8s na złapanie fixa z satelitów
+        maximumAge: 0             // Nie korzysta z przestarzałej lokalizacji z pamięci podręcznej
+      }
     );
   });
 }
