@@ -6,7 +6,7 @@ let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
 let silenceTimer = null;
-const SILENCE_TIMEOUT_MS = 7000; // 7 sekund ciszy do pierwszej reakcji
+const SILENCE_TIMEOUT_MS = 6000; // 6 sekund ciszy do pierwszej reakcji
 
 // 1. Weryfikacja hasła stacji
 function checkAuth() {
@@ -70,7 +70,7 @@ function resetSilenceTimer() {
     remainingSpeakingTime = (nextStartTime - audioContext.currentTime) * 1000;
   }
 
-  // Czas ciszy (7s) zaczyna płynąć dopiero po zakończeniu mowy dyspozytora
+  // Czas ciszy (6s) zaczyna płynąć dopiero po zakończeniu mowy dyspozytora
   silenceTimer = setTimeout(() => {
     triggerSilencePrompt();
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
@@ -78,13 +78,14 @@ function resetSilenceTimer() {
 function triggerSilencePrompt() {
   if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
 
-  // Ukryty impuls zmuszający model do odezwania się przy braku głosu ze strony kursanta
+  console.log("Wykryto ciszę – ponaglam dyspozytora.");
+
   webSocket.send(JSON.stringify({
     clientContent: {
       turns: [
         {
           role: "user",
-          parts: [{ text: "[SYSTEM: Zgłaszający milczy i nie odpowiada od kilku sekund. Zareaguj zgodnie z procedurą: zawołaj go po imieniu/halo lub zapytaj, czy masz pozostać na linii]." }]
+          parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem jako dyspozytor medyczny 999: zapytaj halo czy mnie słychać i ponów pytanie!" }]
         }
       ],
       turnComplete: true
@@ -427,7 +428,8 @@ async function initLiveConnection(instructions, modelName) {
  webSocket.onopen = () => {
     status.innerText = "Połączenie odebrane. Dyspozytor zgłasza się...";
     status.style.color = "#4ade80";
-
+resetSilenceTimer();
+   
     const setupMessage = {
       setup: {
         model: modelName,
@@ -515,7 +517,7 @@ function startAudioStreaming() {
   let sum = 0;
   for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
   const rms = Math.sqrt(sum / inputData.length);
-  if (rms > 0.02) {
+  if (rms > 0.05) {
     // Kursant mówi – resetujemy licznik ciszy
     resetSilenceTimer();
   }
