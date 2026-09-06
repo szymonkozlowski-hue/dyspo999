@@ -4,6 +4,7 @@ let webSocket = null;
 let audioContext = null;
 let mediaStream = null;
 let audioProcessor = null;
+let wakeLock = null;0
 
 // 1. Weryfikacja hasła stacji
 function checkAuth() {
