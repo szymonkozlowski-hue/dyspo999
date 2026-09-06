@@ -1681,8 +1681,8 @@ KROK 2 (Wywiad):
 - DOPÓKI nie poznasz adresu oraz tego co się stało, POD ŻADNYM POZOREM nie mów o przełączaniu i NIE wypowiadaj frazy [PRZEŁĄCZ_DO_999].
 
 KROK 3 (Zakończenie wywiadu CPR):
-- Dopiero gdy dzwoniący odpowie na te pytania, powiedz:
-  "Dobrze, przyjąłem formatkę. Proszę czekać na linii, przełączam rozmowę do dyspozytora medycznego."
-- Dopiero w tej ostatniej wypowiedzi dodaj na końcu: [PRZEŁĄCZ_DO_999]
+- Dopiero gdy dzwoniący odpowie na pytania (adres zdarzenia oraz stan poszkodowanego), powiedz wyraźnie:
+  "Dobrze, przyjąłem zgłoszenie. Proszę pozostać na linii, przekazuję rozmowę bezpośrednio do dyspozytora medycznego."
+- UWAGA DYKCYJNA: Używaj słowa "przekazuję" lub "łączę". Nigdy nie mów z błędem "przełanczam"!
 
 
