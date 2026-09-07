@@ -277,21 +277,53 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
 }
 
 // ==========================================
-// 8. START CALL
+// 8. ROZPOCZĘCIE POŁĄCZENIA
 // ==========================================
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") {
     showError("Wybierz 999 lub 112."); return;
   }
-  const is112 = (currentNumber === "112");
+  
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
   nextStartTime = 0;
   await requestWakeLock();
 
-  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+  const status = document.getElementById("call-status");
   
+  // NATYCHMIASTOWA INICJALIZACJA AUDIO (Rozwiązuje problem Safari/iOS po IVR)
+  if (!audioContext) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+    } catch (e) {
+      showError("Błąd AudioContext: " + e.message);
+      return;
+    }
+  }
+
+  if (!mediaStream) {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
+      });
+    } catch (e) {
+      showError("Brak uprawnień do mikrofonu. Zezwól na dostęp w przeglądarce!");
+      return;
+    }
+  }
+
+  const is112 = (currentNumber === "112");
+
+  // Odtwarzanie zapowiedzi IVR
+  const ivrPromise = is112 
+    ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") 
+    : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+  
+  // Pobieranie danych w tle
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
@@ -304,8 +336,9 @@ async function startCall() {
   })();
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
+  
   if (!isConnected) return;
-  if (!setupData || !setupData.detectedModel) { showError("Błąd stacji."); return; }
+  if (!setupData || !setupData.detectedModel) { showError("Błąd połączenia ze stacją AI."); return; }
   
   savedMedicalContext = setupData;
 
@@ -318,36 +351,26 @@ async function startCall() {
 }
 
 // ==========================================
-// 9. WEBSOCKET
+// 9. WEBSOCKET GEMINI LIVE API
 // ==========================================
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   const status = document.getElementById("call-status");
-  status.innerText = callMode === "cpr" ? "Połączono z 112..." : "Połączono z 999...";
+  status.innerText = callMode === "cpr" ? "Łączenie z operatorem 112..." : "Łączenie z dyspozytorem 999...";
   status.style.color = "#fbbf24";
 
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-    if (audioContext.state === 'suspended') await audioContext.resume();
-  }
-  if (!mediaStream) {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } });
-    } catch (e) { showError("Brak mikrofonu!"); return; }
-  }
+  const uri = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
+  webSocket = new WebSocket(uri);
 
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+  const dispatchers = [
+    { voice: "Kore", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
+    { voice: "Fenrir", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
+  ];
+  const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
-    status.innerText = callMode === "cpr" ? "CPR na linii..." : "Dyspozytor na linii...";
-    status.style.color = "#4ade80";
-
-    const dispatchers = [
-      { voice: "Kore", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
-      { voice: "Fenrir", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
-    ];
-    const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
-
-  // POPRAWNA KONFIGURACJA (Tylko AUDIO, dodane wymagane opisy dla schematu JSON)
+    status.innerText = "Autoryzacja połączenia AI...";
+    
+    // CZYSTA KONFIGURACJA AUDIO (API Gemini v1alpha)
     const setupPayload = {
       model: modelName,
       generationConfig: {
@@ -361,18 +384,12 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       setupPayload.tools = [{
         functionDeclarations: [{
           name: "przelacz_do_dyspozytora_999",
-          description: "Wywołaj to narzędzie, aby przekazać rozmowę do dyspozytora. Musisz podać zebrany adres i to, co się stało.",
+          description: "Przekaż rozmowę do dyspozytora medycznego. Wymaga zebranego adresu i opisu zdarzenia.",
           parameters: {
             type: "OBJECT",
             properties: {
-              adres_zdarzenia: { 
-                type: "STRING", 
-                description: "Dokładny adres zdarzenia ustalony podczas wywiadu" 
-              },
-              co_sie_stalo: { 
-                type: "STRING", 
-                description: "Krótki opis zdarzenia, np. potrącenie, wypadek, zasłabnięcie" 
-              }
+              adres_zdarzenia: { type: "STRING", description: "Dokładny adres zdarzenia" },
+              co_sie_stalo: { type: "STRING", description: "Krótki opis zgłoszenia" }
             },
             required: ["adres_zdarzenia", "co_sie_stalo"]
           }
@@ -380,18 +397,32 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }];
     }
 
+    // WYsłanie konfiguracji
     webSocket.send(JSON.stringify({ setup: setupPayload }));
-    const initialPrompt = callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999;
-    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: initialPrompt }] }], turnComplete: true } }));
-    
-    startAudioStreaming();
-    resetSilenceTimer();
   };
 
   let isTransferring = false;
+  
   webSocket.onmessage = async (event) => {
     try {
       let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
+      
+      // Oczekiwanie na sygnał setupComplete przed wysłaniem pierwszego głosu
+      if (data.setupComplete) {
+        status.innerText = callMode === "cpr" ? "112 połączone. Zgłasza się CPR..." : "999 połączone. Dyspozytor na linii...";
+        status.style.color = "#4ade80";
+
+        const initialPrompt = callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999;
+        webSocket.send(JSON.stringify({ 
+          clientContent: { turns: [{ role: "user", parts: [{ text: initialPrompt }] }], turnComplete: true } 
+        }));
+        
+        startAudioStreaming();
+        resetSilenceTimer();
+        return;
+      }
+
+      // Odbiór audio
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) playAudioChunk(part.inlineData.data);
@@ -399,19 +430,25 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
       
+      // Odbiór zdarzenia narzędzia (Function Calling / Formatka)
       const functionCalls = data.toolCall?.functionCalls;
       if (functionCalls && callMode === "cpr" && !isTransferring) {
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferring = true;
-            handleTransferTo999(call.args?.adres_zdarzenia || "brak", call.args?.co_sie_stalo || "nieznane zdarzenie");
+            const adres = call.args?.adres_zdarzenia || "brak dokładnego adresu";
+            const opis = call.args?.co_sie_stalo || "nieokreślone zdarzenie";
+            handleTransferTo999(adres, opis);
             return;
           }
         }
       }
     } catch (err) {}
   };
-  webSocket.onclose = (e) => { if (isConnected && callMode !== "transferring") showError(`Rozłączono (${e.code})`); };
+
+  webSocket.onclose = (e) => { 
+    if (isConnected && callMode !== "transferring") showError(`Rozłączono (${e.code})`); 
+  };
 }
 
 // ==========================================
@@ -433,13 +470,13 @@ async function handleTransferTo999(adres, opis) {
   nextStartTime = 0;
   const prompt999 = `${savedMedicalContext.systemPrompt}
 [KONTEKST]: Przełączono z 112. Operator przekazał formatkę: ADRES: ${adres}, ZDARZENIE: ${opis}.
-[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, adres: ${adres}. Czy adres się zgadza?" Po potwierdzeniu pogłęb wywiad medyczny.`;
+[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, pod adresem: ${adres}. Czy ten adres się zgadza?" Po potwierdzeniu natychmiast pogłęb wywiad medyczny.`;
 
   await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
 }
 
 // ==========================================
-// 11. AUDIO OUT
+// 11. AUDIO OUT (Do serwera)
 // ==========================================
 function startAudioStreaming() {
   if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
@@ -467,7 +504,7 @@ function startAudioStreaming() {
 }
 
 // ==========================================
-// 12. AUDIO IN
+// 12. AUDIO IN (Z serwera)
 // ==========================================
 function playAudioChunk(b64) {
   if (!audioContext) return;
@@ -489,7 +526,7 @@ function playAudioChunk(b64) {
 }
 
 // ==========================================
-// 13. KONIEC
+// 13. ZAKOŃCZENIE POŁĄCZENIA
 // ==========================================
 function endCall() {
   clearTimeout(silenceTimer);
@@ -498,7 +535,7 @@ function endCall() {
   if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
   if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
   if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
-  document.getElementById("call-status").innerText = "Zakończono.";
+  document.getElementById("call-status").innerText = "Połączenie zakończone.";
   document.getElementById("call-status").style.color = "#9ca3af";
   document.getElementById("call-btn").style.display = "flex";
   document.getElementById("hangup-btn").style.display = "none";
