@@ -1,14 +1,13 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API + OSM AED + Function Calling
- * Wersja zoptymalizowana pod restrykcje mobilne (Android/iOS)
+ * Architektura: Web Audio API + Gemini Live API + OSM AED
+ * Zoptymalizowano pod agresywne restrykcje audio na Android/iOS
  */
 
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
-let audioContext = null;
-let inputAudioContext = null; // DODANE: Dedykowany, globalny kontekst dla mikrofonu
+let audioContext = null; // Jeden zunifikowany kontekst dla mikrofonu i głośnika
 let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
@@ -29,7 +28,7 @@ let savedMedicalContext = {
 // ==========================================
 function checkAuth() {
   if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
-    alert("Błąd: Plik config.js nie został załadowany lub brak parametru STATION_PASSWORD!");
+    alert("Błąd: Plik config.js nie został załadowany!");
     return;
   }
   const inputEl = document.getElementById("pass-input");
@@ -177,7 +176,7 @@ async function fetchNearbyAEDs(lat, lon) {
 
     if (candidates.length === 0) return `W promieniu ${MAX_DISTANCE} m brak AED.`;
 
-    status.innerText = `Pobieranie adresu najbliższego AED...`;
+    status.innerText = `Pobieranie adresu AED...`;
     const resolvedPoints = [];
     for (let i = 0; i < candidates.slice(0, 3).length; i++) {
       const item = candidates[i], tags = item.el.tags || {};
@@ -226,40 +225,40 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") { showError("Wybierz 999 lub 112."); return; }
   
-  // 1. NATYCHMIASTOWA INICJALIZACJA AUDIO (Przed jakimkolwiek kodem asynchronicznym)
-  // Jest to absolutnie krytyczne dla systemów Android oraz iOS
-  try {
-    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-    if (audioContext.state === 'suspended') audioContext.resume();
-    
-    if (!inputAudioContext) inputAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    if (inputAudioContext.state === 'suspended') inputAudioContext.resume();
-  } catch (e) {
-    showError("Błąd sprzętowy audio: " + e.message);
-    return;
-  }
-
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
   isTransferringCall = false;
   nextStartTime = 0;
-  
   await requestWakeLock();
 
+  // 1. ZUNIFIKOWANY KONTEKST AUDIO Z TWARDYM ODBLOKOWANIEM (Rozwiązuje milczenie na Androidzie)
+  try {
+    if (!audioContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      audioContext = new AudioCtx({ sampleRate: 16000 }); // Wymuszamy 16kHz dla Gemini, odtwarzacz sam dopasuje 24kHz
+    }
+    if (audioContext.state === 'suspended') audioContext.resume();
+    
+    // Puszczamy pusty dźwięk, aby na stałe zarezerwować prawa do głośnika u systemu operacyjnego
+    const unlockSource = audioContext.createBufferSource();
+    unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
+    unlockSource.connect(audioContext.destination);
+    unlockSource.start(0);
+  } catch (e) {
+    showError("Błąd sprzętowy audio: " + e.message); return;
+  }
+
+  // 2. Natychmiastowa prośba o mikrofon
   if (!mediaStream) {
     try {
-      // Wymusza prośbę o mikrofon od razu
       mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } });
     } catch (e) { showError("Brak uprawnień do mikrofonu."); return; }
   }
 
   const is112 = (currentNumber === "112");
-  
-  // Zapowiedzi IVR
   const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
   
-  // Praca w tle (współrzędne, prompty)
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
@@ -313,7 +312,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
           description: "Przekaż rozmowę do dyspozytora medycznego. Wymaga zebranego adresu i opisu zdarzenia.",
           parameters: {
             type: "OBJECT",
-            properties: { adres_zdarzenia: { type: "STRING", description: "Dokładny adres zdarzenia" }, co_sie_stalo: { type: "STRING", description: "Krótki opis zgłoszenia" } },
+            properties: { adres_zdarzenia: { type: "STRING", description: "Dokładny adres" }, co_sie_stalo: { type: "STRING", description: "Opis" } },
             required: ["adres_zdarzenia", "co_sie_stalo"]
           }
         }]
@@ -345,14 +344,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferringCall = true;
-            
-            if (audioProcessor) {
-              audioProcessor.onaudioprocess = null;
-              audioProcessor.disconnect();
-              audioProcessor = null;
-            }
-
-            const adres = call.args?.adres_zdarzenia || "brak dokładnego adresu";
+            if (audioProcessor) { audioProcessor.onaudioprocess = null; audioProcessor.disconnect(); audioProcessor = null; }
+            const adres = call.args?.adres_zdarzenia || "brak adresu";
             const opis = call.args?.co_sie_stalo || "nieokreślone zdarzenie";
             handleTransferTo999(adres, opis);
             return;
@@ -372,18 +365,14 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 // ==========================================
 async function handleTransferTo999(adres, opis) {
   clearTimeout(silenceTimer);
-  
   let wait = audioContext && nextStartTime > audioContext.currentTime ? (nextStartTime - audioContext.currentTime)*1000 + 500 : 1000;
   await sleep(wait);
   if (!isConnected) return;
-
   if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
   await sleep(1000);
   if (!isConnected) return;
-
   await playWaitMessageSequence("czekaj.mp3", 1, 1, "999");
   if (!isConnected) return;
-
   nextStartTime = 0;
   isTransferringCall = false;
   
@@ -399,16 +388,21 @@ async function handleTransferTo999(adres, opis) {
 // ==========================================
 function startAudioStreaming() {
   if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
-  
-  // Wymuszone wybudzenie sprzętu dla telefonów z systemem Android/iOS
-  if (inputAudioContext && inputAudioContext.state === 'suspended') inputAudioContext.resume();
+  if (audioContext.state === 'suspended') audioContext.resume();
 
-  const src = inputAudioContext.createMediaStreamSource(mediaStream);
-  audioProcessor = inputAudioContext.createScriptProcessor(4096, 1, 1);
+  const src = audioContext.createMediaStreamSource(mediaStream);
+  audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
   src.connect(audioProcessor);
-  audioProcessor.connect(inputAudioContext.destination);
+  
+  // TRIK DLA ANDROID CHROME: Procesor mikrofonu MUSI być podłączony do wyjścia głośnika
+  // W przeciwnym razie Garbage Collector w Androidzie go ubija!
+  audioProcessor.connect(audioContext.destination);
 
   audioProcessor.onaudioprocess = (e) => {
+    // Od razu wyciszamy wyjście, abyś nie słyszał samego siebie z echem z głośnika
+    const output = e.outputBuffer.getChannelData(0);
+    for (let i = 0; i < output.length; i++) output[i] = 0;
+
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
     
     const input = e.inputBuffer.getChannelData(0);
@@ -432,7 +426,7 @@ function startAudioStreaming() {
 function playAudioChunk(b64) {
   if (!audioContext) return;
   
-  // Wymuszone wybudzenie sprzętu dla telefonów z systemem Android/iOS
+  // Jeśli po IVR telefon nadal trzyma głośnik w zawieszeniu, budzimy go brutalnie w locie
   if (audioContext.state === 'suspended') audioContext.resume();
   
   const bin = atob(b64);
@@ -441,6 +435,7 @@ function playAudioChunk(b64) {
   const float32 = new Float32Array(new Int16Array(bytes.buffer).length);
   for (let i=0; i<float32.length; i++) float32[i] = new Int16Array(bytes.buffer)[i] / 32768.0;
   
+  // Moduł głośnika (bufor) - Gemini wysyła 24kHz, nasz kontekst odtwarza to bezbłędnie
   const buf = audioContext.createBuffer(1, float32.length, 24000);
   buf.copyToChannel(float32, 0);
   const src = audioContext.createBufferSource();
