@@ -31,7 +31,7 @@
 
     /* EKRAN HASŁA */
     #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
-    .shield-icon { width: 64px; height: 64px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
+    .shield-icon { width: 64px; height: 64px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     .auth-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #374151; background: #1f2937; color: white; font-size: 18px; text-align: center; margin: 16px 0; outline: none; }
     .auth-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #dc2626; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
     .error-msg { color: #f87171; font-size: 14px; display: none; margin-top: 10px; }
@@ -169,7 +169,12 @@
 <div class="screen-container">
   <!-- Ekran Logowania -->
   <div id="auth-screen">
-    <div class="shield-icon">🚨</div>
+    <div class="shield-icon">
+      <!-- Wektorowy kogut alarmowy -->
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="#2563eb">
+        <path d="M12 4c-3.31 0-6 2.69-6 6v4H4v4h16v-4h-2v-4c0-3.31-2.69-6-6-6zm-1-3h2v2h-2V1zm-4.76 3.58l1.41-1.41 1.41 1.41-1.41 1.41-1.41-1.41zm11.11 0l1.41 1.41-1.41 1.41-1.41-1.41 1.41-1.41zM5 19h14v2H5v-2z"/>
+      </svg>
+    </div>
     <h2>Stacja Treningowa 999</h2>
     <p style="color: #9ca3af; font-size: 14px; margin-top: 8px;">Wprowadź kod dostępu instruktora</p>
     <input type="password" id="pass-input" class="auth-input" placeholder="Wpisz hasło stacji" onkeydown="if(event.key==='Enter') checkAuth()">
@@ -217,6 +222,6 @@
 </div>
 
 <script src="config.js?v=230"></script>
-<script src="app.js?v=305"></script>
+<script src="app.js?v=306"></script>
 </body>
 </html>
