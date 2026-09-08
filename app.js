@@ -1,17 +1,19 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED + Function Calling
+ * Wersja zoptymalizowana pod restrykcje mobilne (Android/iOS)
  */
 
 let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
 let audioContext = null;
+let inputAudioContext = null; // DODANE: Dedykowany, globalny kontekst dla mikrofonu
 let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
 let silenceTimer = null;
-let isTransferringCall = false; // Globalna flaga blokująca mikrofon w trakcie transferu
+let isTransferringCall = false;
 
 let nextStartTime = 0;
 const BUFFER_DELAY = 0.25;
@@ -224,29 +226,40 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") { showError("Wybierz 999 lub 112."); return; }
   
+  // 1. NATYCHMIASTOWA INICJALIZACJA AUDIO (Przed jakimkolwiek kodem asynchronicznym)
+  // Jest to absolutnie krytyczne dla systemów Android oraz iOS
+  try {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+    if (audioContext.state === 'suspended') audioContext.resume();
+    
+    if (!inputAudioContext) inputAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    if (inputAudioContext.state === 'suspended') inputAudioContext.resume();
+  } catch (e) {
+    showError("Błąd sprzętowy audio: " + e.message);
+    return;
+  }
+
   document.getElementById("call-btn").style.display = "none";
   document.getElementById("hangup-btn").style.display = "flex";
   isConnected = true;
-  isTransferringCall = false; // Reset flagi transferu
+  isTransferringCall = false;
   nextStartTime = 0;
+  
   await requestWakeLock();
-
-  if (!audioContext) {
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-      if (audioContext.state === 'suspended') await audioContext.resume();
-    } catch (e) { showError("Błąd AudioContext: " + e.message); return; }
-  }
 
   if (!mediaStream) {
     try {
+      // Wymusza prośbę o mikrofon od razu
       mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } });
     } catch (e) { showError("Brak uprawnień do mikrofonu."); return; }
   }
 
   const is112 = (currentNumber === "112");
+  
+  // Zapowiedzi IVR
   const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
   
+  // Praca w tle (współrzędne, prompty)
   const setupPromise = (async () => {
     const coords = await getUserLocation();
     let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
@@ -333,7 +346,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
           if (call.name === "przelacz_do_dyspozytora_999") {
             isTransferringCall = true;
             
-            // NATYCHMIASTOWE ZABLOKOWANIE WYSYŁANIA AUDIO DO API
             if (audioProcessor) {
               audioProcessor.onaudioprocess = null;
               audioProcessor.disconnect();
@@ -361,7 +373,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 async function handleTransferTo999(adres, opis) {
   clearTimeout(silenceTimer);
   
-  // Pozwalamy głośnikowi dokończyć odtwarzanie ostatniego zdania operatora 112
   let wait = audioContext && nextStartTime > audioContext.currentTime ? (nextStartTime - audioContext.currentTime)*1000 + 500 : 1000;
   await sleep(wait);
   if (!isConnected) return;
@@ -374,7 +385,7 @@ async function handleTransferTo999(adres, opis) {
   if (!isConnected) return;
 
   nextStartTime = 0;
-  isTransferringCall = false; // Odblokowanie do nowej sesji medycznej
+  isTransferringCall = false;
   
   const prompt999 = `${savedMedicalContext.systemPrompt}
 [KONTEKST]: Przełączono z 112. Operator przekazał formatkę: ADRES: ${adres}, ZDARZENIE: ${opis}.
@@ -384,18 +395,20 @@ async function handleTransferTo999(adres, opis) {
 }
 
 // ==========================================
-// 11. AUDIO OUT (Do serwera)
+// 11. AUDIO OUT (Z mikrofonu na serwer)
 // ==========================================
 function startAudioStreaming() {
   if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
-  const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-  const src = ctx.createMediaStreamSource(mediaStream);
-  audioProcessor = ctx.createScriptProcessor(4096, 1, 1);
+  
+  // Wymuszone wybudzenie sprzętu dla telefonów z systemem Android/iOS
+  if (inputAudioContext && inputAudioContext.state === 'suspended') inputAudioContext.resume();
+
+  const src = inputAudioContext.createMediaStreamSource(mediaStream);
+  audioProcessor = inputAudioContext.createScriptProcessor(4096, 1, 1);
   src.connect(audioProcessor);
-  audioProcessor.connect(ctx.destination);
+  audioProcessor.connect(inputAudioContext.destination);
 
   audioProcessor.onaudioprocess = (e) => {
-    // BLOKADA WYSYŁANIA DANYCH JEŚLI TRWA TRANSFER
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
     
     const input = e.inputBuffer.getChannelData(0);
@@ -414,10 +427,14 @@ function startAudioStreaming() {
 }
 
 // ==========================================
-// 12. AUDIO IN (Z serwera)
+// 12. AUDIO IN (Z serwera do głośnika)
 // ==========================================
 function playAudioChunk(b64) {
   if (!audioContext) return;
+  
+  // Wymuszone wybudzenie sprzętu dla telefonów z systemem Android/iOS
+  if (audioContext.state === 'suspended') audioContext.resume();
+  
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
