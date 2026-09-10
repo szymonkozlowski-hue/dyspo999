@@ -153,12 +153,12 @@ async function checkAvailableModels() {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "centralą 999") {
+async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "") {
   const status = document.getElementById("call-status");
   const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
-    status.innerText = `Łączenie z ${label}...`;
+    status.innerText = `Łączenie ${label}...`;
     status.style.color = "#ffffff";
     await new Promise((resolve) => {
       const waitAudio = new Audio(audioFile);
@@ -200,7 +200,7 @@ async function startCall() {
   }
 
   const is112 = (currentNumber === "112");
-  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
   
   const setupPromise = (async () => {
     const coords = await getUserLocation();
