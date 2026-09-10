@@ -7,256 +7,81 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    body { 
-      background-color: #0b0f19; 
-      color: #ffffff; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100dvh; 
-      overflow: hidden; 
-    }
+    body { background-color: #0b0f19; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100dvh; overflow: hidden; }
 
-    .screen-container { 
-      width: 100%; 
-      max-width: 420px; 
-      height: 100dvh; 
-      background: #1a1c23; 
-      display: flex; 
-      flex-direction: column; 
-      overflow: hidden; 
-      position: relative; 
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
-    }
+    .screen-container { width: 100%; max-width: 420px; height: 100dvh; background: #1a1c23; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+
+    /* WSPÓLNY PASEK STATUSU */
+    .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 0 16px; font-size: 14px; font-weight: 600; color: #ffffff; height: 30px; position: absolute; top: 0; left: 0; width: 100%; z-index: 10; }
+    .status-icons { display: flex; gap: 6px; align-items: center; }
 
     /* EKRAN HASŁA */
-    #auth-screen { 
-      flex: 1; 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: space-between; 
-      align-items: center; 
-      padding: 50px 24px 30px 24px; 
-      text-align: center; 
-    }
-    
-    .auth-header {
-      width: 100%;
-      margin-bottom: 20px;
-    }
-    
-    .auth-logo {
-      width: 276px; /* Zwiększone o 15% */
-      max-width: 100%;
-      height: auto; /* Wymusza zachowanie idealnych proporcji */
-    }
-
-    .auth-title-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .auth-title {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-      margin-bottom: 16px;
-      color: #ffffff;
-    }
-
-    .auth-version {
-      color: #e5e7eb;
-      font-size: 15px;
-    }
-
-    .auth-form {
-      width: 100%;
-      padding-top: 20px;
-    }
-
-    .auth-input { 
-      width: 100%; 
-      padding: 16px; 
-      border-radius: 8px; 
-      border: 1px solid #374151; 
-      background: #252830; 
-      color: #9ca3af; 
-      font-size: 16px; 
-      text-align: center; 
-      margin-bottom: 16px; 
-      outline: none; 
-      transition: border-color 0.2s;
-    }
-    
-    .auth-input:focus {
-      border-color: #4b5563;
-      color: #ffffff;
-    }
-
-    .auth-btn { 
-      width: 100%; 
-      padding: 16px; 
-      border-radius: 8px; 
-      border: none; 
-      background: #c53c3c; 
-      color: white; 
-      font-size: 16px; 
-      font-weight: 700; 
-      cursor: pointer; 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-    
-    .auth-btn:active {
-      background: #a03131;
-    }
-
+    #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 50px 24px 30px 24px; text-align: center; }
+    .auth-header { width: 100%; margin-bottom: 20px; }
+    .auth-logo { width: 276px; max-width: 100%; height: auto; }
+    .auth-title-container { flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 20px; }
+    .auth-title { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; margin-bottom: 16px; color: #ffffff; }
+    .auth-version { color: #e5e7eb; font-size: 15px; }
+    .auth-form { width: 100%; padding-top: 20px; }
+    .auth-input { width: 100%; padding: 16px; border-radius: 8px; border: 1px solid #374151; background: #252830; color: #9ca3af; font-size: 16px; text-align: center; margin-bottom: 16px; outline: none; transition: border-color 0.2s; }
+    .auth-input:focus { border-color: #4b5563; color: #ffffff; }
+    .auth-btn { width: 100%; padding: 16px; border-radius: 8px; border: none; background: #c53c3c; color: white; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .auth-btn:active { background: #a03131; }
     .error-msg { color: #f87171; font-size: 14px; display: none; margin-top: 10px; }
 
-    /* EKRAN TELEFONU */
-    #phone-screen { 
-      flex: 1; 
-      display: none; 
-      flex-direction: column; 
-      justify-content: space-evenly; 
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px; 
-    }
-
-    .display-number { 
-      font-size: 56px; 
-      text-align: center; 
-      font-weight: 700; 
-      letter-spacing: 5px; 
-      min-height: 52px; 
-      color: #fff; 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .call-status { 
-      font-size: 13px; 
-      text-align: center; 
-      color: #9ca3af; 
-      min-height: 18px; 
-    }
-
-    /* KLAWIATURA */
-    .keypad { 
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      gap: 8px; 
-      max-width: 290px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .key { 
-      background: #1f2937; 
-      border-radius: 50%; 
-      width: 58px; 
-      height: 58px; 
-      margin: 0 auto; 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: center; 
-      align-items: center; 
-      cursor: pointer; 
-      user-select: none; 
-      border: 1px solid #374151; 
-    }
-
+    /* EKRAN TELEFONU (DIALER) */
+    #phone-screen { flex: 1; display: none; flex-direction: column; justify-content: space-evenly; padding: 40px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px; }
+    .display-number { font-size: 56px; text-align: center; font-weight: 700; letter-spacing: 5px; min-height: 52px; color: #fff; display: flex; align-items: center; justify-content: center; }
+    
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 290px; margin: 0 auto; width: 100%; }
+    .key { background: #1f2937; border-radius: 50%; width: 58px; height: 58px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; user-select: none; border: 1px solid #374151; }
     .key:active { background: #374151; }
     .key-number { font-size: 22px; font-weight: 600; line-height: 1; }
     .key-sub { font-size: 8px; color: #9ca3af; letter-spacing: 1.5px; margin-top: 1px; }
 
-    /* DOLNY PASEK AKCJI */
-    .actions { 
-      display: grid; 
-      grid-template-columns: 1fr auto 1fr; 
-      align-items: center; 
-      max-width: 290px;
-      margin: 0 auto;
-      width: 100%;
-    }
+    .actions { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 290px; margin: 0 auto; width: 100%; }
+    .logo-slot { display: flex; justify-content: flex-start; align-items: center; padding-left: 4px; pointer-events: none; }
+    .brand-logo { width: 84px; max-width: 100%; height: auto; object-fit: contain; opacity: 0.85; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+    .call-btn { grid-column: 2; width: 62px; height: 62px; border-radius: 50%; background: #16a34a; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; font-size: 26px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); }
+    .del-btn { grid-column: 3; justify-self: end; width: 50px; height: 50px; background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding-right: 4px; }
 
-    .logo-slot {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      padding-left: 4px;
-      pointer-events: none;
-    }
+    /* EKRAN AKTYWNEGO POŁĄCZENIA */
+    #active-call-screen { flex: 1; display: none; flex-direction: column; padding: 60px 16px 40px 16px; align-items: center; justify-content: space-between; }
+    .call-header { text-align: center; width: 100%; }
+    .call-title { font-size: 26px; font-weight: 400; letter-spacing: 1px; margin-bottom: 8px; color: #ffffff; }
+    .call-status { font-size: 16px; color: #9ca3af; min-height: 22px; }
+    
+    .call-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 10px; width: 100%; max-width: 320px; margin: 20px auto; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; opacity: 0.3; user-select: none; }
+    .action-btn.active-btn { opacity: 1.0; cursor: pointer; }
+    .action-icon { width: 68px; height: 68px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; margin-bottom: 10px; transition: all 0.2s; }
+    .action-btn.active-btn:active .action-icon { background: rgba(255,255,255,0.2); }
+    .action-btn.active-btn.toggled .action-icon { background: #ffffff; }
+    .action-btn.active-btn.toggled svg { fill: #1a1c23; }
+    .action-label { font-size: 13px; font-weight: 400; color: #ffffff; letter-spacing: 0.5px; }
 
-    .brand-logo {
-      width: 84px;
-      max-width: 100%;
-      height: auto;
-      object-fit: contain;
-      opacity: 0.85;
-      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
-    }
-
-    .call-btn { 
-      grid-column: 2;
-      width: 62px; 
-      height: 62px; 
-      border-radius: 50%; 
-      background: #16a34a; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      cursor: pointer; 
-      border: none; 
-      font-size: 26px; 
-      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); 
-    }
-
-    .hangup-btn { 
-      grid-column: 2;
-      width: 62px; 
-      height: 62px; 
-      border-radius: 50%; 
-      background: #dc2626; 
-      display: none; 
-      justify-content: center; 
-      align-items: center; 
-      cursor: pointer; 
-      border: none; 
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); 
-    }
-
-    .del-btn { 
-      grid-column: 3;
-      justify-self: end;
-      width: 50px; 
-      height: 50px; 
-      background: transparent; 
-      border: none; 
-      color: #9ca3af; 
-      font-size: 22px; 
-      cursor: pointer; 
-      padding-right: 4px;
-    }
+    .hangup-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
+    .hangup-btn { width: 72px; height: 72px; border-radius: 50%; background: #dc2626; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); }
   </style>
 </head>
 <body>
 
 <div class="screen-container">
-  <!-- Ekran Logowania -->
-  <div id="auth-screen">
-    <div class="auth-header">
-      <img src="logo1.png" alt="Polska Grupa Ratownictwa Medycznego" class="auth-logo">
+  
+  <div class="status-bar" id="status-bar" style="display: none;">
+    <div id="status-time">12:00</div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffffff"><path d="M2,22h20V2L2,22z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="#ffffff"><path d="M15.67,4H14V2h-4v2H8.33C7.6,4,7,4.6,7,5.33v15.33C7,21.4,7.6,22,8.33,22h7.33c.74,0,1.34-.6,1.34-1.33V5.33C17,4.6,16.4,4,15.67,4z"/></svg>
     </div>
-    
+  </div>
+
+  <div id="auth-screen">
+    <div class="auth-header"><img src="logo1.png" alt="Polska Grupa Ratownictwa Medycznego" class="auth-logo"></div>
     <div class="auth-title-container">
       <h1 class="auth-title">WIRTUALNA<br>DYSPOZYTORNIA<br>MEDYCZNA</h1>
       <p class="auth-version">Wersja 1.02 (BETA)</p>
     </div>
-
     <div class="auth-form">
       <input type="password" id="pass-input" class="auth-input" placeholder="Wprowadź hasło" onkeydown="if(event.key==='Enter') checkAuth()">
       <button class="auth-btn" onclick="checkAuth()">POTWIERDŹ</button>
@@ -264,11 +89,8 @@
     </div>
   </div>
 
-  <!-- Ekran Wybierania Numeru -->
   <div id="phone-screen">
-    <div class="call-status" id="call-status">Wybierz numer alarmowy</div>
     <div class="display-number" id="phone-display"></div>
-
     <div class="keypad">
       <div class="key" onclick="pressKey('1')"><span class="key-number">1</span><span class="key-sub">&nbsp;</span></div>
       <div class="key" onclick="pressKey('2')"><span class="key-number">2</span><span class="key-sub">ABC</span></div>
@@ -283,27 +105,57 @@
       <div class="key" onclick="pressKey('0')"><span class="key-number">0</span><span class="key-sub">+</span></div>
       <div class="key" onclick="pressKey('#')"><span class="key-number">#</span><span class="key-sub">&nbsp;</span></div>
     </div>
-
     <div class="actions">
-      <div class="logo-slot">
-        <img src="logo2.png" alt="PGRM.pl" class="brand-logo">
-      </div>
-      <button class="call-btn" id="call-btn" onclick="startCall()" title="Zadzwoń">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff">
-          <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
-        </svg>
-      </button>
-      <button class="hangup-btn" id="hangup-btn" onclick="endCall()" title="Rozłącz">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff">
-          <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-1.02.49-1.96 1.13-2.8 1.89-.2.18-.46.29-.74.29-.3 0-.58-.12-.78-.32L.38 13.44a1.1 1.1 0 0 1 0-1.56C3.36 8.92 7.44 7 12 7s8.64 1.92 11.62 4.88c.43.43.43 1.13 0 1.56l-2.14 2.14c-.2.2-.48.32-.78.32-.28 0-.54-.11-.74-.29-.84-.76-1.78-1.4-2.8-1.89-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
-        </svg>
+      <div class="logo-slot"><img src="logo2.png" alt="PGRM.pl" class="brand-logo"></div>
+      <button class="call-btn" onclick="startCall()" title="Zadzwoń">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
       </button>
       <button class="del-btn" onclick="deleteDigit()">⌫</button>
+    </div>
+  </div>
+
+  <div id="active-call-screen">
+    <div class="call-header">
+      <div class="call-title" id="active-number">NUMER ALARMOWY</div>
+      <div class="call-status" id="call-status">Wybieranie...</div>
+    </div>
+
+    <div class="call-grid">
+      <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15a1 1 0 0 0-.98-.85c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg></div><span class="action-label">WYCISZ</span></div>
+      <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg></div><span class="action-label">KLAWIATURA</span></div>
+      <div class="action-btn active-btn" onclick="toggleSpeaker(this)"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></div><span class="action-label">GŁOŚNIK</span></div>
+      
+      <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div><span class="action-label">DODAJ</span></div>
+      <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></div><span class="action-label">ZAWIEŚ</span></div>
+      <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div><span class="action-label">WIĘCEJ</span></div>
+    </div>
+
+    <div class="hangup-container">
+      <button class="hangup-btn" onclick="endCall()" title="Rozłącz">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-1.02.49-1.96 1.13-2.8 1.89-.2.18-.46.29-.74.29-.3 0-.58-.12-.78-.32L.38 13.44a1.1 1.1 0 0 1 0-1.56C3.36 8.92 7.44 7 12 7s8.64 1.92 11.62 4.88c.43.43.43 1.13 0 1.56l-2.14 2.14c-.2.2-.48.32-.78.32-.28 0-.54-.11-.74-.29-.84-.76-1.78-1.4-2.8-1.89-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+      </button>
     </div>
   </div>
 </div>
 
 <script src="config.js?v=230"></script>
-<script src="app.js?v=306"></script>
+<script src="app.js?v=405"></script>
+<script>
+  function updateTime() {
+    const timeEl = document.getElementById('status-time');
+    if (timeEl) {
+      const now = new Date();
+      timeEl.innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+  }
+  setInterval(updateTime, 1000); updateTime();
+  
+  function toggleSpeaker(btn) {
+    btn.classList.toggle('toggled');
+    if (typeof globalGainNode !== 'undefined' && globalGainNode) {
+      globalGainNode.gain.value = btn.classList.contains('toggled') ? 4.0 : 1.0;
+    }
+  }
+</script>
 </body>
 </html>
