@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Wirtualna Dyspozytornia Medyczna 999</title>
-<style>
+  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
     body { 
@@ -14,14 +14,14 @@
       justify-content: center; 
       align-items: center; 
       min-height: 100dvh; 
-      overflow: hidden; /* Blokuje przewijanie strony w pionie */
+      overflow: hidden; 
     }
 
     .screen-container { 
       width: 100%; 
       max-width: 420px; 
-      height: 100dvh; /* Dynamiczne dopasowanie do widocznego obszaru telefonu */
-      background: #111827; 
+      height: 100dvh; 
+      background: #1a1c23; /* Ciemnoszare, realistyczne tło z projektu */
       display: flex; 
       flex-direction: column; 
       overflow: hidden; 
@@ -29,19 +29,99 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
     }
 
-    /* EKRAN HASŁA */
-    #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
-    .shield-icon { width: 64px; height: 64px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .auth-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #374151; background: #1f2937; color: white; font-size: 18px; text-align: center; margin: 16px 0; outline: none; }
-    .auth-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #dc2626; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
+    /* EKRAN HASŁA - NOWY UKŁAD */
+    #auth-screen { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 50px 24px 30px 24px; 
+      text-align: center; 
+    }
+    
+    .auth-header {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    
+    .auth-logo {
+      width: 240px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .auth-title-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .auth-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: #ffffff;
+    }
+
+    .auth-version {
+      color: #e5e7eb;
+      font-size: 15px;
+    }
+
+    .auth-form {
+      width: 100%;
+      padding-top: 20px;
+    }
+
+    .auth-input { 
+      width: 100%; 
+      padding: 16px; 
+      border-radius: 8px; 
+      border: 1px solid #374151; 
+      background: #252830; 
+      color: #9ca3af; 
+      font-size: 16px; 
+      text-align: center; 
+      margin-bottom: 16px; 
+      outline: none; 
+      transition: border-color 0.2s;
+    }
+    
+    .auth-input:focus {
+      border-color: #4b5563;
+      color: #ffffff;
+    }
+
+    .auth-btn { 
+      width: 100%; 
+      padding: 16px; 
+      border-radius: 8px; 
+      border: none; 
+      background: #c53c3c; /* Ceglasta czerwień z projektu */
+      color: white; 
+      font-size: 16px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    
+    .auth-btn:active {
+      background: #a03131;
+    }
+
     .error-msg { color: #f87171; font-size: 14px; display: none; margin-top: 10px; }
 
-    /* EKRAN TELEFONU - MAKSYMALNIE ZOPTYMALIZOWANY PION */
+    /* EKRAN TELEFONU */
     #phone-screen { 
       flex: 1; 
       display: none; 
       flex-direction: column; 
-      justify-content: space-evenly; /* Równomierne rozłożenie elementów bez uciekania poza dół */
+      justify-content: space-evenly; 
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px; 
     }
 
@@ -68,7 +148,7 @@
     .keypad { 
       display: grid; 
       grid-template-columns: repeat(3, 1fr); 
-      gap: 8px; /* Zmniejszony odstęp między klawiszami */
+      gap: 8px; 
       max-width: 290px;
       margin: 0 auto;
       width: 100%;
@@ -77,7 +157,7 @@
     .key { 
       background: #1f2937; 
       border-radius: 50%; 
-      width: 58px; /* Kompaktowy rozmiar klawisza */
+      width: 58px; 
       height: 58px; 
       margin: 0 auto; 
       display: flex; 
@@ -93,7 +173,7 @@
     .key-number { font-size: 22px; font-weight: 600; line-height: 1; }
     .key-sub { font-size: 8px; color: #9ca3af; letter-spacing: 1.5px; margin-top: 1px; }
 
-  /* DOLNY PASEK AKCJI - SIATKA 3 KOLUMN DLA CENTRALNEJ SŁUCHAWKI */
+    /* DOLNY PASEK AKCJI */
     .actions { 
       display: grid; 
       grid-template-columns: 1fr auto 1fr; 
@@ -103,7 +183,6 @@
       width: 100%;
     }
 
-    /* KONTENER I POZYCJONOWANIE LOGO */
     .logo-slot {
       display: flex;
       justify-content: flex-start;
@@ -169,17 +248,20 @@
 <div class="screen-container">
   <!-- Ekran Logowania -->
   <div id="auth-screen">
-    <div class="shield-icon">
-      <!-- Wektorowy kogut alarmowy -->
-      <svg viewBox="0 0 24 24" width="34" height="34" fill="#2563eb">
-        <path d="M12 4c-3.31 0-6 2.69-6 6v4H4v4h16v-4h-2v-4c0-3.31-2.69-6-6-6zm-1-3h2v2h-2V1zm-4.76 3.58l1.41-1.41 1.41 1.41-1.41 1.41-1.41-1.41zm11.11 0l1.41 1.41-1.41 1.41-1.41-1.41 1.41-1.41zM5 19h14v2H5v-2z"/>
-      </svg>
+    <div class="auth-header">
+      <img src="logo1.png" alt="Polska Grupa Ratownictwa Medycznego" class="auth-logo">
     </div>
-    <h2>Stacja Treningowa 999</h2>
-    <p style="color: #9ca3af; font-size: 14px; margin-top: 8px;">Wprowadź kod dostępu instruktora</p>
-    <input type="password" id="pass-input" class="auth-input" placeholder="Wpisz hasło stacji" onkeydown="if(event.key==='Enter') checkAuth()">
-    <button class="auth-btn" onclick="checkAuth()">Odblokuj Stację</button>
-    <div id="auth-error" class="error-msg">Nieprawidłowe hasło stacji</div>
+    
+    <div class="auth-title-container">
+      <h1 class="auth-title">WIRTUALNA<br>DYSPOZYTORNIA<br>MEDYCZNA</h1>
+      <p class="auth-version">Wersja 1.02 (BETA)</p>
+    </div>
+
+    <div class="auth-form">
+      <input type="password" id="pass-input" class="auth-input" placeholder="Wprowadź hasło" onkeydown="if(event.key==='Enter') checkAuth()">
+      <button class="auth-btn" onclick="checkAuth()">POTWIERDŹ</button>
+      <div id="auth-error" class="error-msg">Nieprawidłowe hasło stacji</div>
+    </div>
   </div>
 
   <!-- Ekran Wybierania Numeru -->
@@ -202,7 +284,7 @@
       <div class="key" onclick="pressKey('#')"><span class="key-number">#</span><span class="key-sub">&nbsp;</span></div>
     </div>
 
-<div class="actions">
+    <div class="actions">
       <div class="logo-slot">
         <img src="logo2.png" alt="PGRM.pl" class="brand-logo">
       </div>
