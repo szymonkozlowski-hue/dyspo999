@@ -7,7 +7,7 @@ let currentNumber = "";
 let isConnected = false;
 let webSocket = null;
 let audioContext = null; 
-let globalGainNode = null; // Steruje głośnikiem
+let globalGainNode = null; 
 let mediaStream = null;
 let audioProcessor = null;
 let wakeLock = null;
@@ -153,12 +153,12 @@ async function checkAvailableModels() {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "") {
+async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3, label = "centralą 999") {
   const status = document.getElementById("call-status");
   const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
-    status.innerText = `Łączenie ${label}...`;
+    status.innerText = `Łączenie z ${label}...`;
     status.style.color = "#ffffff";
     await new Promise((resolve) => {
       const waitAudio = new Audio(audioFile);
@@ -171,7 +171,6 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") { alert("Wybierz 999 lub 112."); return; }
   
-  // Zmiana interfejsu
   document.getElementById("phone-screen").style.display = "none";
   document.getElementById("active-call-screen").style.display = "flex";
   document.getElementById("active-number").innerText = "NUMER ALARMOWY " + currentNumber;
@@ -200,7 +199,7 @@ async function startCall() {
   }
 
   const is112 = (currentNumber === "112");
-  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
+  const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4, "operatorem 112 (CPR)") : playWaitMessageSequence("czekaj.mp3", 2, 3, "centralą 999");
   
   const setupPromise = (async () => {
     const coords = await getUserLocation();
@@ -256,7 +255,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     try {
       let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
       if (data.setupComplete) {
-        status.innerText = "00:01"; // Zamiast tekstu, udajemy start czasu rozmowy
+        status.innerText = "00:01"; 
         status.style.color = "#ffffff";
         webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999 }] }], turnComplete: true } }));
         startAudioStreaming();
@@ -342,7 +341,6 @@ function playAudioChunk(b64) {
   const src = audioContext.createBufferSource();
   src.buffer = buf;
   
-  // Przekierowanie do globalGainNode, aby działało podgłaśnianie (GŁOŚNIK)
   src.connect(globalGainNode || audioContext.destination);
   
   if (nextStartTime <= audioContext.currentTime) nextStartTime = audioContext.currentTime + BUFFER_DELAY;
@@ -354,10 +352,14 @@ function endCall() {
   clearTimeout(silenceTimer);
   isConnected = false; nextStartTime = 0; isTransferringCall = false;
   
+  // Czyszczenie numeru po rozmowie
+  currentNumber = "";
+  document.getElementById("phone-display").innerText = currentNumber;
+  
   // Przywracanie interfejsu
   document.getElementById("active-call-screen").style.display = "none";
   document.getElementById("phone-screen").style.display = "flex";
-  document.getElementById("call-status").innerText = "Połączenie zakończone";
+  document.getElementById("call-status").innerText = "Wybierz numer alarmowy";
   
   if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
   if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
