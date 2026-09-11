@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f19">
-<link rel="apple-touch-icon" href="icon-192.png">
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Wirtualna Dyspozytornia Medyczna 999</title>
+  
+  <!-- Tagi PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
@@ -23,12 +25,14 @@
 
     /* EKRAN HASŁA */
     #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 50px 24px 30px 24px; text-align: center; }
-    .auth-header { width: 100%; margin-bottom: 20px; }
+    .auth-header { width: 100%; margin-bottom: 10px; }
     .auth-logo { width: 276px; max-width: 100%; height: auto; }
-    .auth-title-container { flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 20px; }
-    .auth-title { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; margin-bottom: 16px; color: #ffffff; }
+    
+    .auth-title-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 20px; width: 100%; }
+    .app-logo-main { width: 220px; max-width: 90%; height: auto; margin-bottom: 16px; object-fit: contain; }
     .auth-version { color: #e5e7eb; font-size: 15px; }
-    .auth-form { width: 100%; padding-top: 20px; }
+    
+    .auth-form { width: 100%; padding-top: 10px; }
     .auth-input { width: 100%; padding: 16px; border-radius: 8px; border: 1px solid #374151; background: #252830; color: #9ca3af; font-size: 16px; text-align: center; margin-bottom: 16px; outline: none; transition: border-color 0.2s; }
     .auth-input:focus { border-color: #4b5563; color: #ffffff; }
     .auth-btn { width: 100%; padding: 16px; border-radius: 8px; border: none; background: #c53c3c; color: white; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
@@ -39,17 +43,19 @@
     #phone-screen { flex: 1; display: none; flex-direction: column; justify-content: space-evenly; padding: 40px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px; }
     .display-number { font-size: 56px; text-align: center; font-weight: 700; letter-spacing: 5px; min-height: 52px; color: #fff; display: flex; align-items: center; justify-content: center; }
     
-    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 290px; margin: 0 auto; width: 100%; }
-    .key { background: #1f2937; border-radius: 50%; width: 58px; height: 58px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; user-select: none; border: 1px solid #374151; }
+    /* KLAWIATURA - DYNAMICZNA I ZWIĘKSZONA */
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 4vw, 20px); max-width: 340px; margin: 0 auto; width: 85%; }
+    .key { background: #1f2937; border-radius: 50%; width: 100%; aspect-ratio: 1; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; user-select: none; border: 1px solid #374151; }
     .key:active { background: #374151; }
-    .key-number { font-size: 22px; font-weight: 600; line-height: 1; }
-    .key-sub { font-size: 8px; color: #9ca3af; letter-spacing: 1.5px; margin-top: 1px; }
+    .key-number { font-size: clamp(26px, 8vw, 36px); font-weight: 500; line-height: 1; }
+    .key-sub { font-size: clamp(10px, 3vw, 13px); color: #9ca3af; letter-spacing: 1.5px; margin-top: 2px; }
 
-    .actions { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 290px; margin: 0 auto; width: 100%; }
+    /* DOLNY PASEK AKCJI - DOSTOSOWANY DO SZEROKOŚCI KLAWIATURY */
+    .actions { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 340px; margin: 0 auto; width: 85%; }
     .logo-slot { display: flex; justify-content: flex-start; align-items: center; padding-left: 4px; pointer-events: none; }
     .brand-logo { width: 84px; max-width: 100%; height: auto; object-fit: contain; opacity: 0.85; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
-    .call-btn { grid-column: 2; width: 62px; height: 62px; border-radius: 50%; background: #16a34a; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; font-size: 26px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); }
-    .del-btn { grid-column: 3; justify-self: end; width: 50px; height: 50px; background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding-right: 4px; }
+    .call-btn { grid-column: 2; width: 74px; height: 74px; border-radius: 50%; background: #16a34a; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; font-size: 26px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); }
+    .del-btn { grid-column: 3; justify-self: end; width: 50px; height: 50px; background: transparent; border: none; color: #9ca3af; font-size: 24px; cursor: pointer; padding-right: 4px; }
 
     /* EKRAN AKTYWNEGO POŁĄCZENIA */
     #active-call-screen { flex: 1; display: none; flex-direction: column; padding: 60px 16px 40px 16px; align-items: center; justify-content: space-between; }
@@ -80,12 +86,12 @@
       <div class="status-carrier">PGRM.pl</div>
     </div>
     <div class="status-icons">
-      <!-- Zasięg 3/4 kreski (częściowe wypełnienie) -->
+      <!-- Zasięg 3/4 kreski -->
       <svg viewBox="0 0 24 24" width="16" height="16">
         <path d="M2,22h20V2L2,22z" fill="rgba(255,255,255,0.3)"/>
         <path d="M17,7L2,22h15V7z" fill="#ffffff"/>
       </svg>
-      <!-- Bateria (pełna) -->
+      <!-- Bateria -->
       <svg viewBox="0 0 24 24" width="20" height="20" fill="#ffffff">
         <path d="M15.67,4H14V2h-4v2H8.33C7.6,4,7,4.6,7,5.33v15.33C7,21.4,7.6,22,8.33,22h7.33c.74,0,1.34-.6,1.34-1.33V5.33C17,4.6,16.4,4,15.67,4z"/>
       </svg>
@@ -93,11 +99,15 @@
   </div>
 
   <div id="auth-screen">
-    <div class="auth-header"><img src="logo1.png" alt="Polska Grupa Ratownictwa Medycznego" class="auth-logo"></div>
+    <div class="auth-header">
+      <img src="logo1.png" alt="Polska Grupa Ratownictwa Medycznego" class="auth-logo">
+    </div>
+    
     <div class="auth-title-container">
-      <h1 class="auth-title">WIRTUALNA<br>DYSPOZYTORNIA<br>MEDYCZNA</h1>
+      <img src="wdm_start.png" alt="Wirtualny Dyspozytor Medyczny" class="app-logo-main">
       <p class="auth-version">Wersja 1.02 (BETA)</p>
     </div>
+    
     <div class="auth-form">
       <input type="password" id="pass-input" class="auth-input" placeholder="Wprowadź hasło" onkeydown="if(event.key==='Enter') checkAuth()">
       <button class="auth-btn" onclick="checkAuth()">POTWIERDŹ</button>
@@ -124,7 +134,7 @@
     <div class="actions">
       <div class="logo-slot"><img src="logo2.png" alt="PGRM.pl" class="brand-logo"></div>
       <button class="call-btn" onclick="startCall()" title="Zadzwoń">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="#ffffff"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
       </button>
       <button class="del-btn" onclick="deleteDigit()">⌫</button>
     </div>
@@ -155,7 +165,7 @@
 </div>
 
 <script src="config.js?v=230"></script>
-<script src="app.js?v=406"></script>
+<script src="app.js?v=405"></script>
 <script>
   function updateTime() {
     const timeEl = document.getElementById('status-time');
@@ -180,6 +190,5 @@
     });
   }
 </script>
-  
 </body>
 </html>
