@@ -2,7 +2,7 @@
   "name": "Wirtualna Dyspozytornia 999",
   "short_name": "Dyspozytornia",
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#1a1c23",
   "theme_color": "#0b0f19",
   "orientation": "portrait",
