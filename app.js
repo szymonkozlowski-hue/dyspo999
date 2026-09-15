@@ -14,6 +14,10 @@ let wakeLock = null;
 let silenceTimer = null;
 let isTransferringCall = false;
 
+// NOWE: Zmienne zegara rozmowy
+let callTimerInterval = null;
+let callSeconds = 0;
+
 let nextStartTime = 0;
 const BUFFER_DELAY = 0.25;
 const SILENCE_TIMEOUT_MS = 6000;
@@ -121,7 +125,7 @@ async function fetchNearbyAEDs(lat, lon) {
     const res = await fetch("aed_database.json?v=1");
     if (!res.ok) throw new Error("Brak bazy");
     const elements = (await res.json()).elements || [];
-    const MAX_DISTANCE = 800, roughDelta = 0.012;
+    const MAX_DISTANCE = 800;
     const candidates = elements.filter(el => el.lat || el.center?.lat).map(el => {
       const elLat = el.lat || el.center?.lat, elLon = el.lon || el.center?.lon;
       return { el, lat: elLat, lon: elLon, distance: calculateDistanceMeters(lat, lon, elLat, elLon) };
@@ -168,6 +172,13 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
   }
 }
 
+// NOWE: Funkcja formatująca czas (np. z 65 sek. robi 01:05)
+function formatCallTime(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const s = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
 async function startCall() {
   if (currentNumber !== "999" && currentNumber !== "112") { alert("Wybierz 999 lub 112."); return; }
   
@@ -175,6 +186,10 @@ async function startCall() {
   document.getElementById("active-call-screen").style.display = "flex";
   document.getElementById("active-number").innerText = "NUMER ALARMOWY " + currentNumber;
   document.getElementById("call-status").style.color = "#9ca3af";
+  
+  // Zerowanie czasu połączenia przed startem
+  clearInterval(callTimerInterval);
+  callSeconds = 0;
   
   isConnected = true; isTransferringCall = false; nextStartTime = 0;
   await requestWakeLock();
@@ -254,9 +269,19 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   webSocket.onmessage = async (event) => {
     try {
       let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
+      
       if (data.setupComplete) {
-        status.innerText = "00:01"; 
+        // NOWE: Start odliczania czasu rozmowy
+        if (callSeconds === 0) callSeconds = 1;
+        status.innerText = formatCallTime(callSeconds); 
         status.style.color = "#ffffff";
+        
+        clearInterval(callTimerInterval);
+        callTimerInterval = setInterval(() => {
+          callSeconds++;
+          status.innerText = formatCallTime(callSeconds);
+        }, 1000);
+
         webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999 }] }], turnComplete: true } }));
         startAudioStreaming();
         resetSilenceTimer();
@@ -350,13 +375,17 @@ function playAudioChunk(b64) {
 
 function endCall() {
   clearTimeout(silenceTimer);
+  
+  // NOWE: Wyłączanie zegara i resetowanie
+  clearInterval(callTimerInterval);
+  callTimerInterval = null;
+  callSeconds = 0;
+  
   isConnected = false; nextStartTime = 0; isTransferringCall = false;
   
-  // Czyszczenie numeru po rozmowie
   currentNumber = "";
   document.getElementById("phone-display").innerText = currentNumber;
   
-  // Przywracanie interfejsu
   document.getElementById("active-call-screen").style.display = "none";
   document.getElementById("phone-screen").style.display = "flex";
   document.getElementById("call-status").innerText = "Wybierz numer alarmowy";
