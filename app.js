@@ -14,7 +14,6 @@ let wakeLock = null;
 let silenceTimer = null;
 let isTransferringCall = false;
 
-// NOWE: Zmienne zegara rozmowy
 let callTimerInterval = null;
 let callSeconds = 0;
 
@@ -67,8 +66,10 @@ function showError(msg) {
   clearTimeout(silenceTimer);
   releaseWakeLock();
   const status = document.getElementById("call-status");
-  status.innerText = msg;
-  status.style.color = "#f87171";
+  if (status) {
+    status.innerText = msg;
+    status.style.color = "#f87171";
+  }
   isConnected = false;
   setTimeout(endCall, 3000);
 }
@@ -120,7 +121,7 @@ async function reverseGeocode(lat, lon) {
 async function fetchNearbyAEDs(lat, lon) {
   const status = document.getElementById("call-status");
   if (!lat || !lon) return "Brak odczytu GPS zgłaszającego.";
-  status.innerText = "Weryfikacja bazy AED...";
+  if (status) status.innerText = "Weryfikacja bazy AED...";
   try {
     const res = await fetch("aed_database.json?v=1");
     if (!res.ok) throw new Error("Brak bazy");
@@ -132,17 +133,17 @@ async function fetchNearbyAEDs(lat, lon) {
     }).filter(item => item.distance <= MAX_DISTANCE).sort((a, b) => a.distance - b.distance);
     
     if (candidates.length === 0) return `W promieniu ${MAX_DISTANCE} m brak AED.`;
-    status.innerText = `Pobieranie adresu AED...`;
+    if (status) status.innerText = `Pobieranie adresu AED...`;
     const resolvedPoints = [];
     for (let i = 0; i < candidates.slice(0, 3).length; i++) {
       const tags = candidates[i].el.tags || {};
       let address = tags["addr:street"] ? `ul. ${tags["addr:street"]} ${tags["addr:housenumber"] || ""}${tags["addr:city"] ? `, ${tags["addr:city"]}` : ""}`.trim() : (await reverseGeocode(candidates[i].lat, candidates[i].lon) || "współrzędne");
       resolvedPoints.push(`PUNKT ${i+1}: ok. ${candidates[i].distance}m | Adres: ${address} | Miejsce: ${tags["defibrillator:location"] || tags["description"] || "na ścianie"}`);
     }
-    status.innerText = `Wybieranie...`;
+    if (status) status.innerText = `Wybieranie...`;
     return `ZAREJESTROWANE APARATY AED W OKOLICY:\n${resolvedPoints.join("\n")}`;
   } catch (e) {
-    status.innerText = "Wybieranie..."; return "Nie udało się ustalić bazy AED.";
+    if (status) status.innerText = "Wybieranie..."; return "Nie udało się ustalić bazy AED.";
   }
 }
 
@@ -162,8 +163,10 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
   const repeatCount = Math.floor(Math.random() * (maxRep - minRep + 1)) + minRep;
   for (let i = 0; i < repeatCount; i++) {
     if (!isConnected) break;
-    status.innerText = `Łączenie z ${label}...`;
-    status.style.color = "#ffffff";
+    if (status) {
+      status.innerText = `Łączenie z ${label}...`;
+      status.style.color = "#ffffff";
+    }
     await new Promise((resolve) => {
       const waitAudio = new Audio(audioFile);
       waitAudio.onended = resolve; waitAudio.onerror = resolve; waitAudio.play().catch(resolve);
@@ -172,7 +175,6 @@ async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, max
   }
 }
 
-// NOWE: Funkcja formatująca czas (np. z 65 sek. robi 01:05)
 function formatCallTime(totalSeconds) {
   const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
   const s = (totalSeconds % 60).toString().padStart(2, '0');
@@ -185,9 +187,13 @@ async function startCall() {
   document.getElementById("phone-screen").style.display = "none";
   document.getElementById("active-call-screen").style.display = "flex";
   document.getElementById("active-number").innerText = "NUMER ALARMOWY " + currentNumber;
-  document.getElementById("call-status").style.color = "#9ca3af";
   
-  // Zerowanie czasu połączenia przed startem
+  const status = document.getElementById("call-status");
+  if (status) {
+    status.innerText = "Wybieranie...";
+    status.style.color = "#9ca3af";
+  }
+  
   clearInterval(callTimerInterval);
   callSeconds = 0;
   
@@ -228,7 +234,7 @@ async function startCall() {
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
   if (!isConnected) return;
-  if (!setupData || !setupData.detectedModel) { showError("Błąd połączenia."); return; }
+  if (!setupData || !setupData.detectedModel) { showError("Błąd połączenia z bazą."); return; }
   savedMedicalContext = setupData;
 
   if (is112) {
@@ -240,7 +246,8 @@ async function startCall() {
 
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   const status = document.getElementById("call-status");
-  status.innerText = "Łączenie...";
+  if (status) status.innerText = "Łączenie z AI...";
+  
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
   
   const dispatchers = [
@@ -270,16 +277,23 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
     try {
       let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
       
+      // Obsługa błędu wyrzucanego przez Gemini
+      if (data.error) {
+        showError("Błąd AI: " + data.error.message);
+        return;
+      }
+
       if (data.setupComplete) {
-        // NOWE: Start odliczania czasu rozmowy
         if (callSeconds === 0) callSeconds = 1;
-        status.innerText = formatCallTime(callSeconds); 
-        status.style.color = "#ffffff";
+        if (status) {
+          status.innerText = formatCallTime(callSeconds); 
+          status.style.color = "#ffffff";
+        }
         
         clearInterval(callTimerInterval);
         callTimerInterval = setInterval(() => {
           callSeconds++;
-          status.innerText = formatCallTime(callSeconds);
+          if (status) status.innerText = formatCallTime(callSeconds);
         }, 1000);
 
         webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999 }] }], turnComplete: true } }));
@@ -289,7 +303,11 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }
 
       if (data.serverContent?.modelTurn?.parts) {
-        for (const part of data.serverContent.modelTurn.parts) if (part.inlineData?.data) playAudioChunk(part.inlineData.data);
+        for (const part of data.serverContent.modelTurn.parts) {
+          if (part.inlineData?.data) {
+            playAudioChunk(part.inlineData.data);
+          }
+        }
         resetSilenceTimer();
       }
       
@@ -304,10 +322,14 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
           }
         }
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Błąd przetwarzania wiadomości WebSocket:", err);
+    }
   };
 
-  webSocket.onclose = (e) => { if (isConnected && !isTransferringCall) showError(`Rozłączono (${e.code})`); };
+  webSocket.onclose = (e) => { 
+    if (isConnected && !isTransferringCall) showError(`Rozłączono (${e.code})`); 
+  };
 }
 
 async function handleTransferTo999(adres, opis) {
@@ -358,10 +380,22 @@ function playAudioChunk(b64) {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const float32 = new Float32Array(new Int16Array(bytes.buffer).length);
-  for (let i=0; i<float32.length; i++) float32[i] = new Int16Array(bytes.buffer)[i] / 32768.0;
   
-  const buf = audioContext.createBuffer(1, float32.length, 24000);
+  // ROZWIĄZANIE PROBLEMU "ZAMRAŻANIA" (Zoptymalizowany dekoder PCM 16-bit)
+  const pcmLength = Math.floor(bytes.length / 2);
+  const pcm16 = new Int16Array(pcmLength);
+  const dataView = new DataView(bytes.buffer);
+  
+  for (let i = 0; i < pcmLength; i++) {
+    pcm16[i] = dataView.getInt16(i * 2, true); // Odczyt w formacie Little-Endian
+  }
+  
+  const float32 = new Float32Array(pcmLength);
+  for (let i = 0; i < pcmLength; i++) {
+    float32[i] = pcm16[i] / 32768.0;
+  }
+  
+  const buf = audioContext.createBuffer(1, pcmLength, 24000); // Gemini zwraca próbki 24kHz
   buf.copyToChannel(float32, 0);
   const src = audioContext.createBufferSource();
   src.buffer = buf;
@@ -376,7 +410,6 @@ function playAudioChunk(b64) {
 function endCall() {
   clearTimeout(silenceTimer);
   
-  // NOWE: Wyłączanie zegara i resetowanie
   clearInterval(callTimerInterval);
   callTimerInterval = null;
   callSeconds = 0;
@@ -388,7 +421,6 @@ function endCall() {
   
   document.getElementById("active-call-screen").style.display = "none";
   document.getElementById("phone-screen").style.display = "flex";
-  document.getElementById("call-status").innerText = "Wybierz numer alarmowy";
   
   if (webSocket) { webSocket.onclose = null; webSocket.close(); webSocket = null; }
   if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
