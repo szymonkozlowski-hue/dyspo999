@@ -179,12 +179,10 @@ async function startCall() {
   document.getElementById("phone-screen").style.display = "none";
   document.getElementById("active-call-screen").style.display = "flex";
   
-  // Zmiana tekstu nagłówka na POŁĄCZENIE ALARMOWE
   document.getElementById("active-number").innerText = "POŁĄCZENIE ALARMOWE " + currentNumber;
   
   const status = document.getElementById("call-status");
   
-  // Start odliczania czasu już w momencie inicjacji połączenia
   clearInterval(callTimerInterval);
   callSeconds = 0;
   if (status) {
@@ -218,6 +216,9 @@ async function startCall() {
     try { mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } }); } 
     catch (e) { showError("Brak uprawnień do mikrofonu."); return; }
   }
+
+  // Wymuszenie wybudzenia po uzyskaniu okna uprawnień
+  if (audioContext && audioContext.state === 'suspended') audioContext.resume();
 
   const is112 = (currentNumber === "112");
   const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4) : playWaitMessageSequence("czekaj.mp3", 2, 3);
