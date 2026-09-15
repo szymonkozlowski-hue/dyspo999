@@ -41,7 +41,7 @@ function checkAuth() {
 function showPhone() {
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("phone-screen").style.display = "flex";
-  document.getElementById("status-bar").style.display = "flex";
+  // Usunięto wywoływanie #status-bar
 }
 
 window.addEventListener("DOMContentLoaded", () => {
