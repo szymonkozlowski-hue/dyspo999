@@ -37,7 +37,7 @@
     #phone-screen { flex: 1; display: none; flex-direction: column; justify-content: space-evenly; padding: 40px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px; }
     .display-number { font-size: 56px; text-align: center; font-weight: 700; letter-spacing: 5px; min-height: 52px; color: #fff; display: flex; align-items: center; justify-content: center; }
     
-    /* KLAWIATURA */
+    /* KLAWIATURA - POWIĘKSZONA I RESPANSYWNA */
     .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 4vw, 20px); max-width: 340px; margin: 0 auto; width: 85%; }
     .key { background: #1f2937; border-radius: 50%; width: 100%; aspect-ratio: 1; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; user-select: none; border: 1px solid #374151; }
     .key:active { background: #374151; }
@@ -118,7 +118,7 @@
 
   <div id="active-call-screen">
     <div class="call-header">
-      <div class="call-title" id="active-number">NUMER ALARMOWY</div>
+      <div class="call-title" id="active-number">POŁĄCZENIE ALARMOWE</div>
       <div class="call-status" id="call-status">Wybieranie...</div>
     </div>
 
@@ -141,7 +141,7 @@
 </div>
 
 <script src="config.js?v=230"></script>
-<script src="app.js?v=406"></script>
+<script src="app.js?v=420"></script>
 <script>
   function toggleSpeaker(btn) {
     btn.classList.toggle('toggled');
