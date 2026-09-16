@@ -18,7 +18,8 @@ let callTimerInterval = null;
 let callSeconds = 0;
 
 let nextStartTime = 0;
-const BUFFER_DELAY = 0.25;
+// Zwiększono buforowanie z 0.25 na 0.8 sekundy w celu eliminacji "zacinania" na telefonach
+const BUFFER_DELAY = 0.8;
 const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
@@ -41,7 +42,6 @@ function checkAuth() {
 function showPhone() {
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("phone-screen").style.display = "flex";
-  // Usunięto wywoływanie #status-bar
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -217,7 +217,6 @@ async function startCall() {
     catch (e) { showError("Brak uprawnień do mikrofonu."); return; }
   }
 
-  // Wymuszenie wybudzenia po uzyskaniu okna uprawnień
   if (audioContext && audioContext.state === 'suspended') audioContext.resume();
 
   const is112 = (currentNumber === "112");
@@ -248,9 +247,10 @@ async function startCall() {
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
   
+  // ZMIANA GŁOSÓW NA BARDZIEJ NATURALNE W J. POLSKIM (Aoede - żeński, Puck - męski)
   const dispatchers = [
-    { voice: "Kore", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
-    { voice: "Fenrir", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
+    { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
+    { voice: "Puck", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
   ];
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
