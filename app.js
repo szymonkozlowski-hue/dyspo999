@@ -62,7 +62,6 @@ function deleteDigit() {
 
 function showError(msg) {
   clearTimeout(silenceTimer);
-  // ZATRZYMANIE ZEGARA, ABY NIE NADPISYWAŁ KOMUNIKATU O BŁĘDZIE
   clearInterval(callTimerInterval); 
   releaseWakeLock();
   
@@ -73,7 +72,7 @@ function showError(msg) {
   }
   
   isConnected = false;
-  setTimeout(endCall, 4000); // Wydłużono czas na przeczytanie błędu do 4 sekund
+  setTimeout(endCall, 4000);
 }
 
 function resetSilenceTimer() {
@@ -150,10 +149,10 @@ async function checkAvailableModels() {
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
     const data = await res.json();
-    if (data.error) { showError("Błąd API: " + data.error.message); return null; }
+    if (data.error) { showError("Błąd API AI: " + data.error.message); return null; }
     const bidiModels = data.models?.filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent")).map(m => m.name);
     return bidiModels ? (bidiModels.find(m => m.includes("flash")) || bidiModels[0]) : null;
-  } catch (err) { showError("Błąd sieci podczas łączenia z API: " + err.message); return null; }
+  } catch (err) { showError("Błąd połączenia z serwerem AI: " + err.message); return null; }
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -228,8 +227,10 @@ async function startCall() {
     try {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
+      
       const detectedModel = await checkAvailableModels();
-      if (!detectedModel) return null; // showError zostało już wywołane w checkAvailableModels
+      // Jeśli checkAvailableModels zwróciło null, wywołało już showError. Przerywamy.
+      if (!detectedModel) return null; 
       
       let systemPrompt = "Błąd odczytu procedur. Powiedz użytkownikowi o awarii.";
       try {
@@ -241,16 +242,19 @@ async function startCall() {
       return { systemPrompt, detectedModel };
     } catch (e) {
       console.error(e);
+      showError("Błąd wewnętrzny aplikacji: " + e.message);
       return null;
     }
   })();
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
-  if (!isConnected) return; // Przerwij, jeśli w międzyczasie wystąpił błąd
+  if (!isConnected) return; // Przerwano w międzyczasie
+  
   if (!setupData || !setupData.detectedModel) { 
-      if (isConnected) showError("Nie udało się nawiązać połączenia z bazą danych."); 
-      return; 
+    // Usunięto nadpisywanie komunikatu z błędem! Zostaje błąd zgłoszony wyżej.
+    return; 
   }
+  
   savedMedicalContext = setupData;
 
   if (is112) {
@@ -328,7 +332,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   };
 
   webSocket.onclose = (e) => { 
-    if (isConnected && !isTransferringCall) showError(`Serwer rozłączył połączenie (${e.code})`); 
+    if (isConnected && !isTransferringCall) showError(`Rozłączono połączenie (Kod: ${e.code})`); 
   };
 }
 
