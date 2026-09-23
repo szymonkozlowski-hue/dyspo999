@@ -1,6 +1,6 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API + OSM AED
+ * Architektura: Web Audio API + Gemini Live API (v1beta) + OSM AED
  */
 
 let currentNumber = "";
@@ -145,35 +145,6 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-async function checkAvailableModels() {
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
-    const data = await res.json();
-    
-    if (data.error) {
-      showError("Błąd API AI: " + data.error.message);
-      return null;
-    }
-
-    if (data.models) {
-      const bidiModels = data.models
-        .filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent"))
-        .map(m => m.name);
-        
-      if (bidiModels.length > 0) {
-         // Priorytet dla najnowszego modelu: Gemini 2.5 Flash Native Audio Dialog
-         return bidiModels.find(m => m.includes("2.5-flash")) || bidiModels.find(m => m.includes("2.0-flash")) || bidiModels[0];
-      } else {
-         showError("Klucz API nie obsługuje połączeń głosowych (Brak modeli Bidi).");
-         return null;
-      }
-    }
-  } catch (err) {
-    showError("Błąd łączenia z weryfikacją modeli: " + err.message);
-  }
-  return null;
-}
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3) {
@@ -247,8 +218,8 @@ async function startCall() {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
       
-      const detectedModel = await checkAvailableModels();
-      if (!detectedModel) return null;
+      // Ominięcie blokującego API weryfikującego - wymuszamy nowy stabilny model
+      const detectedModel = "models/gemini-2.0-flash";
       
       let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
       try {
@@ -281,8 +252,9 @@ async function startCall() {
   }
 }
 
+// ZMIANA: Adres WebSocket zaktualizowany do oficjalnego środowiska v1beta
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
