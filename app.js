@@ -218,7 +218,6 @@ async function startCall() {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
       
-      // Ominięcie blokującego API weryfikującego - wymuszamy nowy stabilny model
       const detectedModel = "models/gemini-2.0-flash";
       
       let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
@@ -252,7 +251,6 @@ async function startCall() {
   }
 }
 
-// ZMIANA: Adres WebSocket zaktualizowany do oficjalnego środowiska v1beta
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
@@ -263,16 +261,11 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
+    // Usunięto parametr safetySettings, aby uniknąć błędu 1007
     const setupPayload = {
       model: modelName,
       generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } } },
-      systemInstruction: { parts: [{ text: instructions }] },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-      ]
+      systemInstruction: { parts: [{ text: instructions }] }
     };
     if (callMode === "cpr") {
       setupPayload.tools = [{
