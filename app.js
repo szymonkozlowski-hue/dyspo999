@@ -18,8 +18,6 @@ let callTimerInterval = null;
 let callSeconds = 0;
 
 let nextStartTime = 0;
-// Zwiększono buforowanie z 0.25 na 0.8 sekundy w celu eliminacji "zacinania" na telefonach
-const BUFFER_DELAY = 0.8;
 const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
@@ -247,7 +245,6 @@ async function startCall() {
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
   
-  // ZMIANA GŁOSÓW NA BARDZIEJ NATURALNE W J. POLSKIM (Aoede - żeński, Puck - męski)
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
     { voice: "Puck", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
@@ -347,8 +344,10 @@ function startAudioStreaming() {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
     
     const input = e.inputBuffer.getChannelData(0);
+    
+    // Zmniejszono czułość wykrywania głosu na 0.02 dla słabych mikrofonów w telefonach
     let sum = 0; for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
-    if (Math.sqrt(sum/input.length) > 0.05) resetSilenceTimer();
+    if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
     
     const pcm16 = new Int16Array(input.length);
     for (let i=0; i<input.length; i++) pcm16[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
@@ -363,20 +362,17 @@ function playAudioChunk(b64) {
   if (audioContext.state === 'suspended') audioContext.resume();
   
   const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  
-  const pcmLength = Math.floor(bytes.length / 2);
-  const pcm16 = new Int16Array(pcmLength);
-  const dataView = new DataView(bytes.buffer);
-  
-  for (let i = 0; i < pcmLength; i++) {
-    pcm16[i] = dataView.getInt16(i * 2, true);
-  }
-  
+  const pcmLength = Math.floor(bin.length / 2);
   const float32 = new Float32Array(pcmLength);
+  
+  // Bezpośrednie operacje bitowe - omijają problemy z DataView i buforami przeglądarki
   for (let i = 0; i < pcmLength; i++) {
-    float32[i] = pcm16[i] / 32768.0;
+    let b1 = bin.charCodeAt(i * 2);
+    let b2 = bin.charCodeAt(i * 2 + 1);
+    let val = b1 | (b2 << 8);
+    // Zachowanie znaku ujemnego (Sign Extension) dla 16-bit
+    if (val & 0x8000) val |= 0xFFFF0000;
+    float32[i] = val / 32768.0;
   }
   
   const buf = audioContext.createBuffer(1, pcmLength, 24000);
@@ -386,7 +382,10 @@ function playAudioChunk(b64) {
   
   src.connect(globalGainNode || audioContext.destination);
   
-  if (nextStartTime <= audioContext.currentTime) nextStartTime = audioContext.currentTime + BUFFER_DELAY;
+  // Płynne zarządzanie kolejką dźwiękową zapobiegające "zamrażaniu"
+  if (nextStartTime < audioContext.currentTime) {
+    nextStartTime = audioContext.currentTime + 0.15;
+  }
   src.start(nextStartTime);
   nextStartTime += buf.duration;
 }
