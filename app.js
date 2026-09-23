@@ -145,16 +145,17 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-// Zaktualizowane, odporne na błędy sieciowe wybieranie modelu
+// Zmiana: Dynamiczne pobieranie modelu i wybór najlepszego obsługiwanego
 async function checkAvailableModels() {
-  let fallbackModel = "models/gemini-2.0-flash-exp"; 
+  let fallbackModel = "models/gemini-1.5-flash"; 
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${CONFIG.GEMINI_API_KEY}`);
     const data = await res.json();
     if (data.models) {
       const bidiModels = data.models.filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent")).map(m => m.name);
       if (bidiModels.length > 0) {
-         return bidiModels.find(m => m.includes("flash")) || bidiModels[0];
+         // Szukamy najpierw 2.0, jeśli brak - szukamy 1.5, a ostatecznie bierzemy cokolwiek co obsługuje Bidi API
+         return bidiModels.find(m => m.includes("2.0-flash")) || bidiModels.find(m => m.includes("1.5-flash")) || bidiModels[0];
       }
     }
   } catch (err) {
@@ -235,9 +236,11 @@ async function startCall() {
     try {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
+      
+      // Przywrócono dynamiczne pobieranie modelu
       const detectedModel = await checkAvailableModels();
       
-      let systemPrompt = "Brak odczytu procedur.";
+      let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
       try {
         const res = await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) systemPrompt = await res.text();
@@ -247,7 +250,7 @@ async function startCall() {
       return { systemPrompt, detectedModel };
     } catch (e) {
       console.error(e);
-      showError("Błąd wew. aplikacji: " + e.message);
+      showError("Błąd wewnętrzny aplikacji: " + e.message);
       return null;
     }
   })();
@@ -256,7 +259,7 @@ async function startCall() {
   if (!isConnected) return; 
 
   if (!setupData || !setupData.detectedModel) {
-    showError("Błąd ładowania silnika AI.");
+    showError("Błąd generowania promptu startowego.");
     return;
   }
 
@@ -279,7 +282,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
-    // ROZWIĄZANIE 1008: Dodano całkowite ominięcie filtrów medycznych/niebezpiecznych
     const setupPayload = {
       model: modelName,
       generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } } },
@@ -312,7 +314,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }
 
       if (data.setupComplete) {
-        // ROZWIĄZANIE 1008: Dodano 250ms opóźnienia, aby uniknąć nakładania się ramek
         setTimeout(() => {
           if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
           webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999 }] }], turnComplete: true } }));
@@ -348,7 +349,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   };
 
   webSocket.onclose = (e) => {
-    // ROZWIĄZANIE: Pobieranie dokładnej przyczyny (jeśli dostępna) do logu na ekranie
     if (isConnected && !isTransferringCall) {
       let reasonText = e.reason ? ` - ${e.reason}` : "";
       showError(`Rozłączono (Kod: ${e.code}${reasonText})`);
