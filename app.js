@@ -62,14 +62,18 @@ function deleteDigit() {
 
 function showError(msg) {
   clearTimeout(silenceTimer);
+  // ZATRZYMANIE ZEGARA, ABY NIE NADPISYWAŁ KOMUNIKATU O BŁĘDZIE
+  clearInterval(callTimerInterval); 
   releaseWakeLock();
+  
   const status = document.getElementById("call-status");
   if (status) {
     status.innerText = msg;
     status.style.color = "#f87171";
   }
+  
   isConnected = false;
-  setTimeout(endCall, 3000);
+  setTimeout(endCall, 4000); // Wydłużono czas na przeczytanie błędu do 4 sekund
 }
 
 function resetSilenceTimer() {
@@ -144,11 +148,12 @@ async function fetchNearbyAEDs(lat, lon) {
 
 async function checkAvailableModels() {
   try {
-    const data = await (await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`)).json();
-    if (data.error) { showError(data.error.message); return null; }
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models?key=${CONFIG.GEMINI_API_KEY}`);
+    const data = await res.json();
+    if (data.error) { showError("Błąd API: " + data.error.message); return null; }
     const bidiModels = data.models?.filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent")).map(m => m.name);
     return bidiModels ? (bidiModels.find(m => m.includes("flash")) || bidiModels[0]) : null;
-  } catch (err) { showError(err.message); return null; }
+  } catch (err) { showError("Błąd sieci podczas łączenia z API: " + err.message); return null; }
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -176,7 +181,6 @@ async function startCall() {
   
   document.getElementById("phone-screen").style.display = "none";
   document.getElementById("active-call-screen").style.display = "flex";
-  
   document.getElementById("active-number").innerText = "POŁĄCZENIE ALARMOWE " + currentNumber;
   
   const status = document.getElementById("call-status");
@@ -208,11 +212,11 @@ async function startCall() {
     unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
     unlockSource.connect(audioContext.destination);
     unlockSource.start(0);
-  } catch (e) { showError("Błąd audio: " + e.message); return; }
+  } catch (e) { showError("Błąd sterownika audio: " + e.message); return; }
 
   if (!mediaStream) {
     try { mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } }); } 
-    catch (e) { showError("Brak uprawnień do mikrofonu."); return; }
+    catch (e) { showError("Brak uprawnień do mikrofonu telefonu."); return; }
   }
 
   if (audioContext && audioContext.state === 'suspended') audioContext.resume();
@@ -221,18 +225,32 @@ async function startCall() {
   const ivrPromise = is112 ? playWaitMessageSequence("czekajcpr.mp3", 2, 4) : playWaitMessageSequence("czekaj.mp3", 2, 3);
   
   const setupPromise = (async () => {
-    const coords = await getUserLocation();
-    let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
-    const detectedModel = await checkAvailableModels();
-    if (!detectedModel) return null;
-    let systemPrompt = await (await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" })).text();
-    if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
-    return { systemPrompt, detectedModel };
+    try {
+      const coords = await getUserLocation();
+      let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
+      const detectedModel = await checkAvailableModels();
+      if (!detectedModel) return null; // showError zostało już wywołane w checkAvailableModels
+      
+      let systemPrompt = "Błąd odczytu procedur. Powiedz użytkownikowi o awarii.";
+      try {
+        const res = await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) systemPrompt = await res.text();
+      } catch (err) { console.error("Brak pliku procedur."); }
+
+      if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
+      return { systemPrompt, detectedModel };
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   })();
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
-  if (!isConnected) return;
-  if (!setupData || !setupData.detectedModel) { showError("Błąd połączenia z bazą."); return; }
+  if (!isConnected) return; // Przerwij, jeśli w międzyczasie wystąpił błąd
+  if (!setupData || !setupData.detectedModel) { 
+      if (isConnected) showError("Nie udało się nawiązać połączenia z bazą danych."); 
+      return; 
+  }
   savedMedicalContext = setupData;
 
   if (is112) {
@@ -273,7 +291,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       let data = event.data instanceof Blob ? JSON.parse(await event.data.text()) : JSON.parse(event.data);
       
       if (data.error) {
-        showError("Błąd AI: " + data.error.message);
+        showError("Błąd AI (" + data.error.code + "): " + data.error.message);
         return;
       }
 
@@ -310,7 +328,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   };
 
   webSocket.onclose = (e) => { 
-    if (isConnected && !isTransferringCall) showError(`Rozłączono (${e.code})`); 
+    if (isConnected && !isTransferringCall) showError(`Serwer rozłączył połączenie (${e.code})`); 
   };
 }
 
@@ -345,7 +363,6 @@ function startAudioStreaming() {
     
     const input = e.inputBuffer.getChannelData(0);
     
-    // Zmniejszono czułość wykrywania głosu na 0.02 dla słabych mikrofonów w telefonach
     let sum = 0; for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
     
@@ -365,12 +382,10 @@ function playAudioChunk(b64) {
   const pcmLength = Math.floor(bin.length / 2);
   const float32 = new Float32Array(pcmLength);
   
-  // Bezpośrednie operacje bitowe - omijają problemy z DataView i buforami przeglądarki
   for (let i = 0; i < pcmLength; i++) {
     let b1 = bin.charCodeAt(i * 2);
     let b2 = bin.charCodeAt(i * 2 + 1);
     let val = b1 | (b2 << 8);
-    // Zachowanie znaku ujemnego (Sign Extension) dla 16-bit
     if (val & 0x8000) val |= 0xFFFF0000;
     float32[i] = val / 32768.0;
   }
@@ -382,7 +397,6 @@ function playAudioChunk(b64) {
   
   src.connect(globalGainNode || audioContext.destination);
   
-  // Płynne zarządzanie kolejką dźwiękową zapobiegające "zamrażaniu"
   if (nextStartTime < audioContext.currentTime) {
     nextStartTime = audioContext.currentTime + 0.15;
   }
