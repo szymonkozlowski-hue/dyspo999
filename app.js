@@ -1,6 +1,6 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API (v1beta) + OSM AED
+ * Architektura: Web Audio API + Gemini Live API + OSM AED
  */
 
 let currentNumber = "";
@@ -21,6 +21,7 @@ let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
+let currentApiVersion = "v1alpha"; // Domyślna wersja, automatycznie nadpisywana przez wykrywacz
 
 function checkAuth() {
   if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
@@ -145,6 +146,37 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
+// ZMIANA: Niezawodny, dynamiczny detektor poprawnych modeli i wersji API
+async function checkAvailableModels() {
+  const versionsToTry = ["v1alpha", "v1beta"];
+  
+  for (const ver of versionsToTry) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${CONFIG.GEMINI_API_KEY}`);
+      if (!res.ok) continue; // Jeżeli dany kanał rzuca błąd, przejdź do następnego
+      
+      const data = await res.json();
+      if (data.models) {
+        const bidiModels = data.models
+          .filter(m => m.supportedGenerationMethods?.includes("bidiGenerateContent"))
+          .map(m => m.name);
+          
+        if (bidiModels.length > 0) {
+          // Sukces - znaleźliśmy kanał i modele. Zapisujemy wersję do użycia w gnieździe WebSocket.
+          currentApiVersion = ver; 
+          // Szukamy najnowszego modelu flash, a jeśli go nie ma - bierzemy pierwszy z brzegu działający
+          return bidiModels.find(m => m.includes("flash")) || bidiModels[0];
+        }
+      }
+    } catch (e) {
+      console.warn(`Sprawdzanie kanału ${ver} nie powiodło się. Szukam dalej...`);
+    }
+  }
+  
+  showError("Błąd: Twój klucz API nie posiada aktualnie dostępu do żadnych modeli głosowych (Bidi).");
+  return null;
+}
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3) {
@@ -218,7 +250,8 @@ async function startCall() {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
       
-      const detectedModel = "models/gemini-2.0-flash";
+      const detectedModel = await checkAvailableModels();
+      if (!detectedModel) return null; // Zatrzymuje dalej w przypadku braku modelu
       
       let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
       try {
@@ -239,7 +272,7 @@ async function startCall() {
   if (!isConnected) return; 
 
   if (!setupData || !setupData.detectedModel) {
-    return;
+    return; // Błąd wyświetlił się już wcześniej w checkAvailableModels
   }
 
   savedMedicalContext = setupData;
@@ -251,8 +284,9 @@ async function startCall() {
   }
 }
 
+// ZMIANA: WebSocket nawiązuje połączenie zgodnie z dynamicznie wykrytą wersją API (${currentApiVersion})
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${currentApiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
@@ -261,7 +295,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
-    // Usunięto parametr safetySettings, aby uniknąć błędu 1007
     const setupPayload = {
       model: modelName,
       generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } } },
