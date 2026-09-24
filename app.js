@@ -1,6 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API (Bezpośredni model 2.0 Flash Exp)
+ * Architektura: Web Audio API + Gemini Live API + OSM AED
+ * Auto-Discovery: Automatyczne wykrywanie modeli i wersji API (v1beta / v1alpha)
  */
 
 let currentNumber = "";
@@ -21,6 +22,7 @@ let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
+let currentApiVersion = "v1beta"; // Zostanie nadpisane przez skaner
 
 function checkAuth() {
   if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
@@ -43,6 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  console.log("Wirtualna Dyspozytornia - Wersja ze Skanerem API v3"); // Test w konsoli
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -72,7 +75,7 @@ function showError(msg) {
   }
 
   isConnected = false;
-  setTimeout(endCall, 5000); 
+  setTimeout(endCall, 6000); 
 }
 
 function resetSilenceTimer() {
@@ -143,6 +146,36 @@ async function fetchNearbyAEDs(lat, lon) {
   } catch (e) {
     return "Nie udało się ustalić bazy AED.";
   }
+}
+
+// INTELELGENTNY SKANER MODELI
+async function discoverBidiModel() {
+  const versions = ["v1beta", "v1alpha"];
+  for (const ver of versions) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${CONFIG.GEMINI_API_KEY}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.models) {
+          // Filtrujemy tylko te modele, które wspierają "bidiGenerateContent" (czyli Live API)
+          const bidiModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"));
+          
+          if (bidiModels.length > 0) {
+             // Preferujemy modele w kolejności: 2.5 flash, 2.0 flash, pozostałe
+             let bestModel = bidiModels.find(m => m.name.includes("2.5-flash")) || 
+                             bidiModels.find(m => m.name.includes("2.0-flash")) || 
+                             bidiModels[0];
+             
+             console.log(`Wybrano model: ${bestModel.name} na kanale ${ver}`);
+             return { version: ver, modelName: bestModel.name };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`Błąd skanowania kanału ${ver}:`, e);
+    }
+  }
+  return null;
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -218,8 +251,14 @@ async function startCall() {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
       
-      // Omijamy REST API i idziemy bezpośrednio po sprawdzony kanał audio
-      const detectedModel = "models/gemini-2.0-flash-exp";
+      const discovered = await discoverBidiModel();
+      if (!discovered) {
+        showError("Klucz API nie posiada dostępu do modeli Live (Bidi).");
+        return null;
+      }
+      
+      currentApiVersion = discovered.version;
+      const detectedModel = discovered.modelName;
       
       let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
       try {
@@ -240,7 +279,7 @@ async function startCall() {
   if (!isConnected) return; 
 
   if (!setupData || !setupData.detectedModel) {
-    return;
+    return; // Błąd wyświetli się sam
   }
 
   savedMedicalContext = setupData;
@@ -253,8 +292,8 @@ async function startCall() {
 }
 
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
-  // Wymuszamy najnowszą eksperymentalną wersję v1alpha dla modelu gemini-2.0-flash-exp
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+  // Podmieniamy adres na taki, jaki został wykryty przez skaner (v1alpha lub v1beta)
+  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${currentApiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
