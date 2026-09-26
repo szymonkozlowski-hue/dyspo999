@@ -148,34 +148,103 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-// INTELELGENTNY SKANER MODELI
+const LIVE_MODEL_FALLBACKS = [
+  "models/gemini-3.8-live",
+  "models/gemini-3.1-flash-live-preview",
+  "models/gemini-2.5-flash-native-audio-preview",
+  "models/gemini-live-2.5-flash-preview",
+  "models/gemini-2.0-flash-live-001",
+  "models/gemini-2.0-flash-exp"
+];
+
+function normalizeModelName(name) {
+  if (!name) return LIVE_MODEL_FALLBACKS[0];
+  return name.startsWith("models/") ? name : ("models/" + name);
+}
+
+function liveModelScore(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("image")) return -1;
+  if (n.includes("3.8-live")) return 100;
+  if (n.includes("3.1") && n.includes("live")) return 90;
+  if (n.includes("native-audio")) return 80;
+  if (n.includes("live") && n.includes("2.5")) return 70;
+  if (n.includes("live") && n.includes("2.0")) return 60;
+  if (n.includes("live")) return 50;
+  return 0;
+}
+
+function isLiveCapable(model) {
+  const name = model.name || "";
+  if (liveModelScore(name) < 0) return false;
+  const methods = model.supportedGenerationMethods || [];
+  if (methods.includes("bidiGenerateContent")) return liveModelScore(name) > 0 || name.toLowerCase().includes("exp");
+  const n = name.toLowerCase();
+  return n.includes("live") || n.includes("native-audio");
+}
+
+async function listAllModels(ver) {
+  const models = [];
+  let pageToken = "";
+  for (let page = 0; page < 8; page++) {
+    const params = new URLSearchParams({ key: CONFIG.GEMINI_API_KEY, pageSize: "100" });
+    if (pageToken) params.set("pageToken", pageToken);
+    const res = await fetch("https://generativelanguage.googleapis.com/" + ver + "/models?" + params.toString());
+    if (!res.ok) break;
+    const data = await res.json();
+    if (Array.isArray(data.models)) models.push(...data.models);
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+  }
+  return models;
+}
+
 async function discoverBidiModel() {
   const versions = ["v1beta", "v1alpha"];
   for (const ver of versions) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${CONFIG.GEMINI_API_KEY}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.models) {
-          // Filtrujemy tylko te modele, które wspierają "bidiGenerateContent" (czyli Live API)
-          const bidiModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("bidiGenerateContent"));
-          
-          if (bidiModels.length > 0) {
-             // Preferujemy modele w kolejności: 2.5 flash, 2.0 flash, pozostałe
-             let bestModel = bidiModels.find(m => m.name.includes("2.5-flash")) || 
-                             bidiModels.find(m => m.name.includes("2.0-flash")) || 
-                             bidiModels[0];
-             
-             console.log(`Wybrano model: ${bestModel.name} na kanale ${ver}`);
-             return { version: ver, modelName: bestModel.name };
-          }
-        }
+      const models = await listAllModels(ver);
+      const liveModels = models.filter(isLiveCapable).sort((a, b) => liveModelScore(b.name) - liveModelScore(a.name));
+      if (liveModels.length > 0 && liveModelScore(liveModels[0].name) > 0) {
+        console.log("Wybrano model:", liveModels[0].name, "na kanale", ver);
+        return { version: ver, modelName: normalizeModelName(liveModels[0].name) };
       }
     } catch (e) {
-      console.warn(`Błąd skanowania kanału ${ver}:`, e);
+      console.warn("Błąd skanowania kanału " + ver + ":", e);
     }
   }
-  return null;
+  console.log("Brak modelu Live na liście API — używam zapasowego", LIVE_MODEL_FALLBACKS[0]);
+  return { version: "v1beta", modelName: LIVE_MODEL_FALLBACKS[0] };
+}
+
+function downsampleBuffer(input, inRate, outRate) {
+  if (inRate === outRate) return input;
+  const ratio = inRate / outRate;
+  const outLen = Math.max(1, Math.floor(input.length / ratio));
+  const output = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const idx = i * ratio;
+    const i0 = Math.floor(idx);
+    const i1 = Math.min(i0 + 1, input.length - 1);
+    const frac = idx - i0;
+    output[i] = input[i0] * (1 - frac) + input[i1] * frac;
+  }
+  return output;
+}
+
+function floatToBase64Pcm16(float32) {
+  const pcm16 = new Int16Array(float32.length);
+  for (let i = 0; i < float32.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32[i]));
+    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  const bytes = new Uint8Array(pcm16.buffer);
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -224,14 +293,15 @@ async function startCall() {
 
   try {
     if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
       globalGainNode = audioContext.createGain();
-      globalGainNode.gain.value = document.querySelector('.action-btn.active-btn').classList.contains('toggled') ? 4.0 : 1.0;
+      const speakerBtn = document.querySelector('.action-btn.active-btn');
+      globalGainNode.gain.value = speakerBtn && speakerBtn.classList.contains('toggled') ? 4.0 : 1.0;
       globalGainNode.connect(audioContext.destination);
     }
     if (audioContext.state === 'suspended') audioContext.resume();
     const unlockSource = audioContext.createBufferSource();
-    unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
+    unlockSource.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
     unlockSource.connect(audioContext.destination);
     unlockSource.start(0);
   } catch (e) { showError("Błąd sterownika audio: " + e.message); return; }
@@ -292,8 +362,9 @@ async function startCall() {
 }
 
 async function initLiveConnection(instructions, modelName, callMode = "medical") {
-  // Podmieniamy adres na taki, jaki został wykryty przez skaner (v1alpha lub v1beta)
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${currentApiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+  const apiVersion = currentApiVersion || "v1beta";
+  const resolvedModel = normalizeModelName(modelName);
+  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
@@ -303,8 +374,12 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
   webSocket.onopen = () => {
     const setupPayload = {
-      model: modelName,
-      generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } } },
+      model: resolvedModel,
+      responseModalities: ["AUDIO"],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
+      },
       systemInstruction: { parts: [{ text: instructions }] }
     };
     if (callMode === "cpr") {
@@ -316,6 +391,12 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }];
     }
     webSocket.send(JSON.stringify({ setup: setupPayload }));
+  };
+
+  webSocket.onerror = () => {
+    if (isConnected && !isTransferringCall) {
+      showError("Nie udało się połączyć z Gemini Live API.");
+    }
   };
 
   webSocket.onmessage = async (event) => {
@@ -340,7 +421,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
-            playAudioChunk(part.inlineData.data);
+            playAudioChunk(part.inlineData.data, part.inlineData.mimeType);
           }
         }
         resetSilenceTimer();
@@ -392,7 +473,10 @@ function startAudioStreaming() {
   const src = audioContext.createMediaStreamSource(mediaStream);
   audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
   src.connect(audioProcessor);
-  audioProcessor.connect(audioContext.destination);
+  const silentGain = audioContext.createGain();
+  silentGain.gain.value = 0;
+  audioProcessor.connect(silentGain);
+  silentGain.connect(audioContext.destination);
 
   audioProcessor.onaudioprocess = (e) => {
     const output = e.outputBuffer.getChannelData(0);
@@ -404,15 +488,19 @@ function startAudioStreaming() {
     let sum = 0; for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
 
-    const pcm16 = new Int16Array(input.length);
-    for (let i=0; i<input.length; i++) pcm16[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
-    const bytes = new Uint8Array(pcm16.buffer);
-    let bin = ""; for (let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    webSocket.send(JSON.stringify({ realtimeInput: { mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(bin) }] } }));
+    const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
+    webSocket.send(JSON.stringify({
+      realtimeInput: {
+        audio: {
+          mimeType: "audio/pcm;rate=16000",
+          data: floatToBase64Pcm16(resampled)
+        }
+      }
+    }));
   };
 }
 
-function playAudioChunk(b64) {
+function playAudioChunk(b64, mimeType) {
   if (!audioContext) return;
   if (audioContext.state === 'suspended') audioContext.resume();
 
@@ -428,7 +516,11 @@ function playAudioChunk(b64) {
     float32[i] = val / 32768.0;
   }
 
-  const buf = audioContext.createBuffer(1, pcmLength, 24000);
+  let sampleRate = 24000;
+  const rateMatch = /rate=(\d+)/.exec(mimeType || "");
+  if (rateMatch) sampleRate = parseInt(rateMatch[1], 10);
+
+  const buf = audioContext.createBuffer(1, pcmLength, sampleRate);
   buf.copyToChannel(float32, 0);
   const src = audioContext.createBufferSource();
   src.buffer = buf;
