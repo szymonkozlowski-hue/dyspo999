@@ -1,7 +1,6 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
- * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Auto-Discovery: Automatyczne wykrywanie modeli i wersji API (v1beta / v1alpha)
+ * Architektura: Web Audio API + Gemini Live API + Auto-Fallback WebSocket
  */
 
 let currentNumber = "";
@@ -21,8 +20,18 @@ let callSeconds = 0;
 let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 6000;
 
-let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
-let currentApiVersion = "v1beta"; 
+let savedMedicalContext = { systemPrompt: "" };
+
+const API_CONFIGS = [
+  { version: "v1beta", model: "models/gemini-2.5-flash" },
+  { version: "v1alpha", model: "models/gemini-2.5-flash" },
+  { version: "v1beta", model: "models/gemini-2.0-flash" },
+  { version: "v1alpha", model: "models/gemini-2.0-flash" },
+  { version: "v1beta", model: "models/gemini-2.0-flash-exp" },
+  { version: "v1alpha", model: "models/gemini-2.0-flash-exp" },
+  { version: "v1beta", model: "models/gemini-1.5-flash" }
+];
+let currentConfigIndex = 0;
 
 function checkAuth() {
   if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
@@ -45,7 +54,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja połączona (Cursor + Poprawki)"); 
+  console.log("Wirtualna Dyspozytornia - Wersja Audio Fix (Czysty Mikrofon)");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -75,7 +84,7 @@ function showError(msg) {
   }
 
   isConnected = false;
-  setTimeout(endCall, 6000); 
+  setTimeout(endCall, 5000); 
 }
 
 function resetSilenceTimer() {
@@ -148,105 +157,6 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-const LIVE_MODEL_FALLBACKS = [
-  "models/gemini-3.8-live",
-  "models/gemini-3.1-flash-live-preview",
-  "models/gemini-2.5-flash-native-audio-preview",
-  "models/gemini-live-2.5-flash-preview",
-  "models/gemini-2.0-flash-live-001",
-  "models/gemini-2.0-flash-exp"
-];
-
-function normalizeModelName(name) {
-  if (!name) return LIVE_MODEL_FALLBACKS[0];
-  return name.startsWith("models/") ? name : ("models/" + name);
-}
-
-function liveModelScore(name) {
-  const n = (name || "").toLowerCase();
-  if (n.includes("image")) return -1;
-  if (n.includes("3.8-live")) return 100;
-  if (n.includes("3.1") && n.includes("live")) return 90;
-  if (n.includes("native-audio")) return 80;
-  if (n.includes("live") && n.includes("2.5")) return 70;
-  if (n.includes("live") && n.includes("2.0")) return 60;
-  if (n.includes("live")) return 50;
-  return 0;
-}
-
-function isLiveCapable(model) {
-  const name = model.name || "";
-  if (liveModelScore(name) < 0) return false;
-  const methods = model.supportedGenerationMethods || [];
-  if (methods.includes("bidiGenerateContent")) return liveModelScore(name) > 0 || name.toLowerCase().includes("exp");
-  const n = name.toLowerCase();
-  return n.includes("live") || n.includes("native-audio");
-}
-
-async function listAllModels(ver) {
-  const models = [];
-  let pageToken = "";
-  for (let page = 0; page < 8; page++) {
-    const params = new URLSearchParams({ key: CONFIG.GEMINI_API_KEY, pageSize: "100" });
-    if (pageToken) params.set("pageToken", pageToken);
-    const res = await fetch("https://generativelanguage.googleapis.com/" + ver + "/models?" + params.toString());
-    if (!res.ok) break;
-    const data = await res.json();
-    if (Array.isArray(data.models)) models.push(...data.models);
-    if (!data.nextPageToken) break;
-    pageToken = data.nextPageToken;
-  }
-  return models;
-}
-
-async function discoverBidiModel() {
-  const versions = ["v1beta", "v1alpha"];
-  for (const ver of versions) {
-    try {
-      const models = await listAllModels(ver);
-      const liveModels = models.filter(isLiveCapable).sort((a, b) => liveModelScore(b.name) - liveModelScore(a.name));
-      if (liveModels.length > 0 && liveModelScore(liveModels[0].name) > 0) {
-        console.log("Wybrano model:", liveModels[0].name, "na kanale", ver);
-        return { version: ver, modelName: normalizeModelName(liveModels[0].name) };
-      }
-    } catch (e) {
-      console.warn("Błąd skanowania kanału " + ver + ":", e);
-    }
-  }
-  console.log("Brak modelu Live na liście API — używam zapasowego", LIVE_MODEL_FALLBACKS[0]);
-  return { version: "v1beta", modelName: LIVE_MODEL_FALLBACKS[0] };
-}
-
-function downsampleBuffer(input, inRate, outRate) {
-  if (inRate === outRate) return input;
-  const ratio = inRate / outRate;
-  const outLen = Math.max(1, Math.floor(input.length / ratio));
-  const output = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i++) {
-    const idx = i * ratio;
-    const i0 = Math.floor(idx);
-    const i1 = Math.min(i0 + 1, input.length - 1);
-    const frac = idx - i0;
-    output[i] = input[i0] * (1 - frac) + input[i1] * frac;
-  }
-  return output;
-}
-
-function floatToBase64Pcm16(float32) {
-  const pcm16 = new Int16Array(float32.length);
-  for (let i = 0; i < float32.length; i++) {
-    const s = Math.max(-1, Math.min(1, float32[i]));
-    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-  }
-  const bytes = new Uint8Array(pcm16.buffer);
-  let bin = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-  }
-  return btoa(bin);
-}
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playWaitMessageSequence(audioFile = "czekaj.mp3", minRep = 2, maxRep = 3) {
@@ -288,12 +198,18 @@ async function startCall() {
     if (status) status.innerText = formatCallTime(callSeconds);
   }, 1000);
 
-  isConnected = true; isTransferringCall = false; nextStartTime = 0;
+  isConnected = true; isTransferringCall = false; nextStartTime = 0; 
+  currentConfigIndex = 0; 
   await requestWakeLock();
 
   try {
     if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // NAPRAWA: Zmuszamy przeglądarkę do natywnego użycia jakości 16kHz
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      } catch (e) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)(); 
+      }
       globalGainNode = audioContext.createGain();
       const speakerBtn = document.querySelector('.action-btn.active-btn');
       globalGainNode.gain.value = speakerBtn && speakerBtn.classList.contains('toggled') ? 4.0 : 1.0;
@@ -307,7 +223,11 @@ async function startCall() {
   } catch (e) { showError("Błąd sterownika audio: " + e.message); return; }
 
   if (!mediaStream) {
-    try { mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } }); }
+    try { 
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
+      }); 
+    }
     catch (e) { showError("Brak uprawnień do mikrofonu telefonu."); return; }
   }
 
@@ -321,50 +241,52 @@ async function startCall() {
       const coords = await getUserLocation();
       let aedContext = coords ? await fetchNearbyAEDs(coords.lat, coords.lon) : "";
       
-      const discovered = await discoverBidiModel();
-      if (!discovered) {
-        showError("Klucz API nie posiada dostępu do modeli Live (Bidi).");
-        return null;
-      }
-      
-      currentApiVersion = discovered.version;
-      const detectedModel = discovered.modelName;
-      
-      let systemPrompt = "Brak odczytu procedur. Powiedz użytkownikowi o awarii.";
+      let systemPrompt = "Brak odczytu procedur.";
       try {
         const res = await fetch(`procedury.txt?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) systemPrompt = await res.text();
       } catch (err) { console.error("Brak pliku procedur."); }
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
-      return { systemPrompt, detectedModel };
+      return { systemPrompt };
     } catch (e) {
-      console.error(e);
       showError("Błąd wewnętrzny aplikacji: " + e.message);
       return null;
     }
   })();
 
   const [_, setupData] = await Promise.all([ivrPromise, setupPromise]);
-  if (!isConnected) return; 
-
-  if (!setupData || !setupData.detectedModel) {
-    return; // Błąd wyświetli się sam
-  }
+  if (!isConnected || !setupData) return; 
 
   savedMedicalContext = setupData;
 
   if (is112) {
-    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR.`, setupData.detectedModel, "cpr");
+    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR.`, "cpr");
   } else {
-    await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
+    await initLiveConnection(setupData.systemPrompt, "medical");
   }
 }
 
-async function initLiveConnection(instructions, modelName, callMode = "medical") {
-  const apiVersion = currentApiVersion || "v1beta";
-  const resolvedModel = normalizeModelName(modelName);
-  webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
+async function initLiveConnection(instructions, callMode = "medical") {
+  if (currentConfigIndex >= API_CONFIGS.length) {
+    showError("Twój klucz API odrzucił wszystkie znane modele Live. Sprawdź limity konta.");
+    return;
+  }
+
+  const config = API_CONFIGS[currentConfigIndex];
+  const modelName = config.model;
+  const apiVersion = config.version;
+  
+  const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`;
+  
+  let setupHandshakeComplete = false;
+
+  if (webSocket) {
+    webSocket.onclose = null;
+    webSocket.close();
+  }
+  
+  webSocket = new WebSocket(wsUrl);
 
   const dispatchers = [
     { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
@@ -373,9 +295,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
-    // NAPRAWA BLĘDU 1007: Usunięto zdublowane responseModalities ze struktury głównej setupPayload
     const setupPayload = {
-      model: resolvedModel,
+      model: modelName,
       generationConfig: {
         responseModalities: ["AUDIO"],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
@@ -409,6 +330,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       }
 
       if (data.setupComplete) {
+        setupHandshakeComplete = true; 
         setTimeout(() => {
           if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN) return;
           webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: callMode === "cpr" ? dispatcher.intro112 : dispatcher.intro999 }] }], turnComplete: true } }));
@@ -444,9 +366,15 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   };
 
   webSocket.onclose = (e) => {
-    if (isConnected && !isTransferringCall) {
+    if (!isConnected || isTransferringCall) return;
+
+    if (!setupHandshakeComplete) {
+      console.warn(`Odrzucono ${modelName} na ${apiVersion}. Zmieniam model...`);
+      currentConfigIndex++;
+      initLiveConnection(instructions, callMode);
+    } else {
       let reasonText = e.reason ? ` - ${e.reason}` : "";
-      showError(`Rozłączono (Kod: ${e.code}${reasonText})`);
+      showError(`Rozłączono połączenie (Kod: ${e.code}${reasonText})`);
     }
   };
 }
@@ -464,7 +392,7 @@ async function handleTransferTo999(adres, opis) {
   nextStartTime = 0; isTransferringCall = false;
 
   const prompt999 = `${savedMedicalContext.systemPrompt}\n[KONTEKST]: Przełączono z 112. ADRES: ${adres}, ZDARZENIE: ${opis}.\n[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, pod adresem: ${adres}. Czy ten adres się zgadza?"`;
-  await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
+  await initLiveConnection(prompt999, "medical");
 }
 
 function startAudioStreaming() {
@@ -472,6 +400,7 @@ function startAudioStreaming() {
   if (audioContext.state === 'suspended') audioContext.resume();
   const src = audioContext.createMediaStreamSource(mediaStream);
   audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+  
   src.connect(audioProcessor);
   const silentGain = audioContext.createGain();
   silentGain.gain.value = 0;
@@ -479,23 +408,32 @@ function startAudioStreaming() {
   silentGain.connect(audioContext.destination);
 
   audioProcessor.onaudioprocess = (e) => {
-    const output = e.outputBuffer.getChannelData(0);
-    for (let i = 0; i < output.length; i++) output[i] = 0;
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
 
     const input = e.inputBuffer.getChannelData(0);
-
-    let sum = 0; for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
+    let sum = 0; 
+    for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
+    
+    // Obliczamy głośność i jeśli użytkownik mówi, resetujemy timer bezczynności
     if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
 
-    const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
+    // NAPRAWA: Bezpieczna, bezstratna konwersja do PCM16
+    const pcm16 = new Int16Array(input.length);
+    for (let i = 0; i < input.length; i++) {
+      pcm16[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
+    }
+
+    const bytes = new Uint8Array(pcm16.buffer);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) {
+      bin += String.fromCharCode(bytes[i]);
+    }
     
-    // NAPRAWA BŁĘDU MIKROFONU: Przywrócono mediaChunks zgodnie ze specyfikacją Google
     webSocket.send(JSON.stringify({
       realtimeInput: {
         mediaChunks: [{
-          mimeType: "audio/pcm;rate=16000",
-          data: floatToBase64Pcm16(resampled)
+          mimeType: `audio/pcm;rate=${audioContext.sampleRate}`,
+          data: btoa(bin)
         }]
       }
     }));
