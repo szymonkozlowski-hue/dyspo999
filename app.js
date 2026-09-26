@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Wersja Ostateczna: Skaner API + Czysty Mikrofon + Niskie Opóźnienia
+ * Zaktualizowano: Dodano narzędzie zakoncz_polaczenie
  */
 
 let currentNumber = "";
@@ -19,8 +19,7 @@ let callTimerInterval = null;
 let callSeconds = 0;
 
 let nextStartTime = 0;
-// Zwiększono czas oczekiwania na 12 sekund, by zapobiec przerywaniu generowania odpowiedzi
-const SILENCE_TIMEOUT_MS = 12000;
+const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
 let currentApiVersion = "v1beta"; 
@@ -46,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Poprawka VAD i Latencji");
+  console.log("Wirtualna Dyspozytornia - Wersja z funkcją rozłączania");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -212,7 +211,6 @@ async function discoverBidiModel() {
   return { version: "v1beta", modelName: LIVE_MODEL_FALLBACKS[0] };
 }
 
-// Funkcja bezpiecznego ujednolicania jakości audio bez zniekształceń
 function downsampleBuffer(input, inRate, outRate) {
   if (inRate === outRate) return input;
   const ratio = inRate / outRate;
@@ -326,6 +324,10 @@ async function startCall() {
       } catch (err) { console.error("Brak pliku procedur."); }
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
+      
+      // Dodajemy do promptu żelazną zasadę dotyczącą rozłączania
+      systemPrompt += `\n\n[ZASADY ROZŁĄCZANIA]: Gdy zgłaszający stwierdzi, że nie potrzebuje już pomocy, albo gdy sam uznasz, że zgłoszenie zostało w pełni obsłużone, powiedz pożegnanie (np. "Jeśli moja dalsza pomoc nie jest potrzebna, dziękuję za zgłoszenie i rozłączam się.") i BEZWZGLĘDNIE wywołaj funkcję narzędziową "zakoncz_polaczenie", aby fizycznie odłożyć słuchawkę.`;
+
       return { systemPrompt, detectedModel };
     } catch (e) {
       console.error(e);
@@ -368,16 +370,27 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         responseModalities: ["AUDIO"],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
       },
-      systemInstruction: { parts: [{ text: instructions }] }
+      systemInstruction: { parts: [{ text: instructions }] },
+      // INICJALIZACJA NARZĘDZI (Funkcja rozłączania dla obu trybów)
+      tools: [{
+        functionDeclarations: [
+          {
+            name: "zakoncz_polaczenie",
+            description: "Zakończ i rozłącz połączenie alarmowe. Użyj tej funkcji ZAWSZE, gdy pożegnasz się ze zgłaszającym lub gdy on odłoży słuchawkę/odmówi pomocy."
+          }
+        ]
+      }]
     };
+
+    // Jeśli to 112, dodajemy dodatkowo funkcję przełączania do 999
     if (callMode === "cpr") {
-      setupPayload.tools = [{
-        functionDeclarations: [{
-          name: "przelacz_do_dyspozytora_999", description: "Przekaż rozmowę do dyspozytora medycznego.",
-          parameters: { type: "OBJECT", properties: { adres_zdarzenia: { type: "STRING" }, co_sie_stalo: { type: "STRING" } }, required: ["adres_zdarzenia", "co_sie_stalo"] }
-        }]
-      }];
+      setupPayload.tools[0].functionDeclarations.push({
+        name: "przelacz_do_dyspozytora_999", 
+        description: "Przekaż rozmowę do dyspozytora medycznego.",
+        parameters: { type: "OBJECT", properties: { adres_zdarzenia: { type: "STRING" }, co_sie_stalo: { type: "STRING" } }, required: ["adres_zdarzenia", "co_sie_stalo"] }
+      });
     }
+
     webSocket.send(JSON.stringify({ setup: setupPayload }));
   };
 
@@ -415,13 +428,26 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
 
+      // OBSŁUGA FUNKCJI (Narzędzi) wywoływanych przez AI
       const functionCalls = data.toolCall?.functionCalls;
-      if (functionCalls && callMode === "cpr" && !isTransferringCall) {
+      if (functionCalls && !isTransferringCall) {
         for (const call of functionCalls) {
-          if (call.name === "przelacz_do_dyspozytora_999") {
+          if (call.name === "przelacz_do_dyspozytora_999" && callMode === "cpr") {
             isTransferringCall = true;
             if (audioProcessor) { audioProcessor.onaudioprocess = null; audioProcessor.disconnect(); audioProcessor = null; }
             handleTransferTo999(call.args?.adres_zdarzenia || "brak", call.args?.co_sie_stalo || "nieokreślone");
+            return;
+          }
+          if (call.name === "zakoncz_polaczenie") {
+            // Czekamy 3.5 sekundy, aby AI zdążyło wypowiedzieć "rozłączam się", zanim fizycznie odetniemy dźwięk
+            const status = document.getElementById("call-status");
+            if (status) {
+              status.innerText = "Rozłączanie...";
+              status.style.color = "#f87171";
+            }
+            setTimeout(() => {
+              endCall();
+            }, 3500);
             return;
           }
         }
@@ -460,7 +486,6 @@ function startAudioStreaming() {
   if (audioContext.state === 'suspended') audioContext.resume();
   const src = audioContext.createMediaStreamSource(mediaStream);
   
-  // ROZWIĄZANIE OPÓŹNIEŃ: Zmniejszono bufor z 4096 do 2048, co podwaja szybkość wysyłania pakietów
   audioProcessor = audioContext.createScriptProcessor(2048, 1, 1);
   
   src.connect(audioProcessor);
@@ -476,10 +501,8 @@ function startAudioStreaming() {
     let sum = 0; 
     for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     
-    // ZNACZĄCO zmniejszono próg czułości (z 0.02 na 0.005), aby mikrofon wyłapywał mowę i wygaszał 12-sekundowy stoper
     if (Math.sqrt(sum/input.length) > 0.005) resetSilenceTimer();
 
-    // Wymuszenie 16kHz dla bezpieczeństwa
     const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
 
     const pcm16 = new Int16Array(resampled.length);
@@ -496,7 +519,7 @@ function startAudioStreaming() {
     webSocket.send(JSON.stringify({
       realtimeInput: {
         mediaChunks: [{
-          mimeType: `audio/pcm;rate=16000`, // Zablokowano stawkę na sztywno
+          mimeType: `audio/pcm;rate=16000`,
           data: btoa(bin)
         }]
       }
