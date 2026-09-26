@@ -22,7 +22,7 @@ let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 6000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
-let currentApiVersion = "v1beta"; // Zostanie nadpisane przez skaner
+let currentApiVersion = "v1beta"; 
 
 function checkAuth() {
   if (typeof CONFIG === "undefined" || !CONFIG.STATION_PASSWORD) {
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja ze Skanerem API v3"); // Test w konsoli
+  console.log("Wirtualna Dyspozytornia - Wersja połączona (Cursor + Poprawki)"); 
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -373,9 +373,9 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
   webSocket.onopen = () => {
+    // NAPRAWA BLĘDU 1007: Usunięto zdublowane responseModalities ze struktury głównej setupPayload
     const setupPayload = {
       model: resolvedModel,
-      responseModalities: ["AUDIO"],
       generationConfig: {
         responseModalities: ["AUDIO"],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
@@ -489,12 +489,14 @@ function startAudioStreaming() {
     if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
 
     const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
+    
+    // NAPRAWA BŁĘDU MIKROFONU: Przywrócono mediaChunks zgodnie ze specyfikacją Google
     webSocket.send(JSON.stringify({
       realtimeInput: {
-        audio: {
+        mediaChunks: [{
           mimeType: "audio/pcm;rate=16000",
           data: floatToBase64Pcm16(resampled)
-        }
+        }]
       }
     }));
   };
