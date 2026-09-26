@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Łamanie instynktu modelu (Wstrzykiwanie reguł szkoleniowych)
+ * Zaktualizowano: Usunięcie sprzecznych komunikatów przy rozłączaniu
  */
 
 let currentNumber = "";
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z twardymi regułami wywiadu");
+  console.log("Wirtualna Dyspozytornia - Wersja z idealnym pożegnaniem");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -87,8 +87,7 @@ function resetSilenceTimer() {
   }
   silenceTimer = setTimeout(() => {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
-    // ZMIANA: Przypomnienie o regułach przy wybudzaniu po ciszy
-    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem: zawołaj halo i ponów swoje pytanie. PAMIĘTAJ: To symulacja, trzymaj się jedynie procedur w pliku procedury.txt" }] }], turnComplete: true } }));
+    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem: zawołaj halo i ponów swoje pytanie. PAMIĘTAJ: To symulacja, stosuj się do procedur w pliku procedury.txt" }] }], turnComplete: true } }));
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
 }
 
@@ -326,7 +325,8 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ. Kiedy dzwoniący zgłasza pomyłkę, rezygnuje z pomocy lub wywiad dobiegł końca, powiedz tylko krótkie pożegnanie i NATYCHMIAST użyj funkcji "zakoncz_polaczenie". Nieodłożenie słuchawki blokuje linię alarmową dla innych!`;
+      // ZMIANA: Twardy zakaz używania zwrotów utrzymujących połączenie
+      systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ, gdy dzwoniący rezygnuje z pomocy lub wywiad dobiegł końca. MASZ SUROWY ZAKAZ mówienia "proszę się nie rozłączać" ani "proszę czekać na linii" w takiej sytuacji. Powiedz WYŁĄCZNIE: "Przyjąłem, dziękuję za zgłoszenie, zwalniam linię" i NATYCHMIAST użyj funkcji "zakoncz_polaczenie".`;
 
       return { systemPrompt, detectedModel };
     } catch (e) {
@@ -345,11 +345,10 @@ async function startCall() {
 
   savedMedicalContext = setupData;
 
-  // ZMIANA: Twarde wstrzyknięcie zasad szkoleniowych na końcu promptu tuż przed połączeniem
   if (is112) {
-    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (trzymaj się jedynie procedur w pliku procedury.txt).`, setupData.detectedModel, "cpr");
+    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (stosuj się do procedur w pliku procedury.txt).`, setupData.detectedModel, "cpr");
   } else {
-    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 999 jako dyspozytor w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (trzymaj się jedynie procedur w pliku procedury.txt).`, setupData.detectedModel, "medical");
+    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 999 jako dyspozytor w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (stosuj się do procedur w pliku procedury.txt).`, setupData.detectedModel, "medical");
   }
 }
 
@@ -358,17 +357,17 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const resolvedModel = normalizeModelName(modelName);
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
-  // ZMIANA: Niewidzialny pierwszy komunikat (najsilniejszy dla modelu) agresywnie blokuje jego bazowe instynkty ratunkowe
+  // ZMIANA: Zaktualizowano ukryty prompt startowy o twardy zakaz mówienia "nie rozłączaj się"
   const dispatchers = [
     { 
       voice: "Aoede", 
-      intro999: "Zgłoś się powitaniem jako dyspozytorka 999 i zapytaj o adres. PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt.", 
-      intro112: "Zgłoś się powitaniem jako operatorka 112 i pytaj: co się stało? PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt." 
+      intro999: "Zgłoś się powitaniem jako dyspozytorka 999 i zapytaj o adres. PAMIĘTAJ: To symulacja! To symulacja, stosuj się do procedur w pliku procedury.txt. Gdy kończysz rozmowę, NIGDY nie proś o pozostanie na linii, powiedz tylko 'zwalniam linię' i użyj narzędzia.", 
+      intro112: "Zgłoś się powitaniem jako operatorka 112 i pytaj: co się stało? PAMIĘTAJ: To symulacja! To symulacja, stosuj się do procedur w pliku procedury.txt. Gdy kończysz rozmowę, NIGDY nie proś o pozostanie na linii, powiedz tylko 'zwalniam linię' i użyj narzędzia." 
     },
     { 
       voice: "Puck", 
-      intro999: "Zgłoś się powitaniem jako dyspozytor 999 i zapytaj o adres. PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt.", 
-      intro112: "Zgłoś się powitaniem jako operator 112 i pytaj: co się stało? PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt" 
+      intro999: "Zgłoś się powitaniem jako dyspozytor 999 i zapytaj o adres. PAMIĘTAJ: To symulacja! To symulacja, stosuj się do procedur w pliku procedury.txt. Gdy kończysz rozmowę, NIGDY nie proś o pozostanie na linii, powiedz tylko 'zwalniam linię' i użyj narzędzia.", 
+      intro112: "Zgłoś się powitaniem jako operator 112 i pytaj: co się stało? PAMIĘTAJ: To symulacja! To symulacja, stosuj się do procedur w pliku procedury.txt. Gdy kończysz rozmowę, NIGDY nie proś o pozostanie na linii, powiedz tylko 'zwalniam linię' i użyj narzędzia." 
     }
   ];
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
