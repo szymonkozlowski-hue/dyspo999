@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Niezawodne narzędzie rozłączania z dynamicznym czasem
+ * Zaktualizowano: Ochrona przed halucynacją narzędzia rozłączania
  */
 
 let currentNumber = "";
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Poprawka Narzędzia Rozłączania");
+  console.log("Wirtualna Dyspozytornia - Wersja z Naprawionym Narzędziem (Brak Halucynacji)");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -325,8 +325,8 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      // ZMIANA: Twardy i bezwzględny rozkaz dotyczący rozłączania
-      systemPrompt += `\n\n[ZASADY ROZŁĄCZANIA]: Gdy zgłaszający zrezygnuje z pomocy (np. pomyłka) lub gdy zgłoszenie dobiegnie końca, POŻEGNAJ SIĘ (np. "Rozumiem, dziękuję za zgłoszenie, rozłączam się.") i BEZWZGLĘDNIE wywołaj funkcję narzędziową "zakoncz_polaczenie". Nie pytaj o zgodę na rozłączenie, po prostu użyj narzędzia natychmiast!`;
+      // ZMIANA: Jasny, żelazny zakaz wypowiadania nazwy narzędzia.
+      systemPrompt += `\n\n[BARDZO WAŻNE - ZASADY ROZŁĄCZANIA]: Gdy zgłoszenie zostanie w pełni obsłużone lub zgłaszający odmówi pomocy (pomyłka), zakończ rozmowę. Powiedz TYLKO naturalne pożegnanie (np. "Rozumiem, dziękuję za zgłoszenie, rozłączam się") i BEZWZGLĘDNIE użyj systemowego narzędzia (Function Call) o nazwie "zakoncz_polaczenie".\nUWAGA: Nigdy nie mów na głos słów "zakończ połączenie" ani "wywołuję funkcję"! Użycie narzędzia to akcja w systemie, a nie tekst do wypowiedzenia na głos.`;
 
       return { systemPrompt, detectedModel };
     } catch (e) {
@@ -374,16 +374,9 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       tools: [{
         functionDeclarations: [
           {
+            // ZMIANA: Usunięto całkowicie 'parameters' - odchudzone narzędzie działa jak najprostszy guzik
             name: "zakoncz_polaczenie",
-            description: "Zakończ i rozłącz połączenie alarmowe. Użyj ZAWSZE na koniec, po pożegnaniu ze zgłaszającym.",
-            // ZMIANA: Model otrzymał parametry do wypełnienia, aby nie omijał tej funkcji
-            parameters: {
-              type: "OBJECT",
-              properties: {
-                powod: { type: "STRING", description: "Krótki powód rozłączenia np. 'Odmowa pomocy' lub 'Koniec wywiadu'" }
-              },
-              required: ["powod"]
-            }
+            description: "Fizycznie rozłącza trwające połączenie. Wywołaj to narzędzie ZAWSZE na samym końcu, natychmiast po pożegnaniu ze zgłaszającym."
           }
         ]
       }]
@@ -434,7 +427,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
 
-      // ZMIANA: Uniwersalne i pancerne wyłapywanie wywołań narzędzi z obu wariantów struktury Google
       let functionCalls = data.toolCall?.functionCalls;
       if (!functionCalls && data.serverContent?.modelTurn?.parts) {
           const fcParts = data.serverContent.modelTurn.parts.filter(p => p.functionCall);
@@ -450,7 +442,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
             return;
           }
           if (call.name === "zakoncz_polaczenie") {
-            isTransferringCall = true; // Natychmiast blokujemy dalszy nasłuch mikrofonu
+            isTransferringCall = true; 
             
             const status = document.getElementById("call-status");
             if (status) {
@@ -458,7 +450,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
               status.style.color = "#f87171";
             }
 
-            // ZMIANA: Dynamiczne wyliczenie, ile sekund AI będzie jeszcze "mówić" z bufora (plus 0.5s marginesu)
             let waitTime = audioContext && nextStartTime > audioContext.currentTime 
                          ? (nextStartTime - audioContext.currentTime) * 1000 + 500 
                          : 1500;
