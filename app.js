@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Twarde wymuszanie rozłączania (parametryzacja narzędzia)
+ * Zaktualizowano: Łamanie instynktu modelu (Wstrzykiwanie reguł szkoleniowych)
  */
 
 let currentNumber = "";
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z Twardym Rozłączaniem");
+  console.log("Wirtualna Dyspozytornia - Wersja z twardymi regułami wywiadu");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -87,7 +87,8 @@ function resetSilenceTimer() {
   }
   silenceTimer = setTimeout(() => {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
-    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem jako dyspozytor: zawołaj halo czy mnie słychać i ponów swoje pytanie!" }] }], turnComplete: true } }));
+    // ZMIANA: Przypomnienie o regułach przy wybudzaniu po ciszy
+    webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem: zawołaj halo i ponów swoje pytanie. PAMIĘTAJ: To symulacja, trzymaj się jedynie procedur w pliku procedury.txt" }] }], turnComplete: true } }));
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
 }
 
@@ -325,7 +326,6 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      // ZMIANA: Bardzo restrykcyjny wymóg zwalniania linii
       systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ. Kiedy dzwoniący zgłasza pomyłkę, rezygnuje z pomocy lub wywiad dobiegł końca, powiedz tylko krótkie pożegnanie i NATYCHMIAST użyj funkcji "zakoncz_polaczenie". Nieodłożenie słuchawki blokuje linię alarmową dla innych!`;
 
       return { systemPrompt, detectedModel };
@@ -345,10 +345,11 @@ async function startCall() {
 
   savedMedicalContext = setupData;
 
+  // ZMIANA: Twarde wstrzyknięcie zasad szkoleniowych na końcu promptu tuż przed połączeniem
   if (is112) {
-    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 jako operator CPR.`, setupData.detectedModel, "cpr");
+    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 112 w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (trzymaj się jedynie procedur w pliku procedury.txt).`, setupData.detectedModel, "cpr");
   } else {
-    await initLiveConnection(setupData.systemPrompt, setupData.detectedModel, "medical");
+    await initLiveConnection(`${setupData.systemPrompt}\n\n[AKTUALNA ROLA]: Odbierasz numer 999 jako dyspozytor w trybie SYMULACJI SZKOLENIOWEJ. Ściśle stosuj UPROSZCZONY WYWIAD (trzymaj się jedynie procedur w pliku procedury.txt).`, setupData.detectedModel, "medical");
   }
 }
 
@@ -357,9 +358,18 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const resolvedModel = normalizeModelName(modelName);
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
+  // ZMIANA: Niewidzialny pierwszy komunikat (najsilniejszy dla modelu) agresywnie blokuje jego bazowe instynkty ratunkowe
   const dispatchers = [
-    { voice: "Aoede", intro999: "Jesteś dyspozytorką 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorką 112. Zgłoś się powitaniem i pytaj: co się stało?" },
-    { voice: "Puck", intro999: "Jesteś dyspozytorem 999. Zgłoś się powitaniem i zapytaj o adres.", intro112: "Jesteś operatorem 112. Zgłoś się powitaniem i pytaj: co się stało?" }
+    { 
+      voice: "Aoede", 
+      intro999: "Zgłoś się powitaniem jako dyspozytorka 999 i zapytaj o adres. PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt.", 
+      intro112: "Zgłoś się powitaniem jako operatorka 112 i pytaj: co się stało? PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt." 
+    },
+    { 
+      voice: "Puck", 
+      intro999: "Zgłoś się powitaniem jako dyspozytor 999 i zapytaj o adres. PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt.", 
+      intro112: "Zgłoś się powitaniem jako operator 112 i pytaj: co się stało? PAMIĘTAJ: To tylko symulacja! trzymaj się jedynie procedur w pliku procedury.txt" 
+    }
   ];
   const dispatcher = dispatchers[Math.floor(Math.random() * dispatchers.length)];
 
@@ -374,7 +384,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       tools: [{
         functionDeclarations: [
           {
-            // ZMIANA: Model musi wygenerować JSON z polem "akcja", co zmusza go do faktycznego użycia narzędzia
             name: "zakoncz_polaczenie",
             description: "Narzędzie systemowe zwalniające linię. Używaj zawsze na zakończenie rozmowy alarmowej.",
             parameters: {
@@ -493,7 +502,7 @@ async function handleTransferTo999(adres, opis) {
   if (!isConnected) return;
   nextStartTime = 0; isTransferringCall = false;
 
-  const prompt999 = `${savedMedicalContext.systemPrompt}\n[KONTEKST]: Przełączono z 112. ADRES: ${adres}, ZDARZENIE: ${opis}.\n[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, pod adresem: ${adres}. Czy ten adres się zgadza?"`;
+  const prompt999 = `${savedMedicalContext.systemPrompt}\n[KONTEKST]: Przełączono z 112. ADRES: ${adres}, ZDARZENIE: ${opis}.\n[ZADANIE]: Odbierz słowami: "Dyspozytor medyczny 999. Otrzymałem z 112 zgłoszenie dotyczące: ${opis}, pod adresem: ${adres}. Czy ten adres się zgadza?".\n\n[PRZYPOMNIENIE]: Bezwzględnie stosuj uproszczony wywiad! Nie pytaj o numer telefonu, mieszkanie ani o bezpieczeństwo.`;
   await initLiveConnection(prompt999, savedMedicalContext.detectedModel, "medical");
 }
 
