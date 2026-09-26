@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Dodano narzędzie zakoncz_polaczenie
+ * Zaktualizowano: Niezawodne narzędzie rozłączania z dynamicznym czasem
  */
 
 let currentNumber = "";
@@ -19,7 +19,7 @@ let callTimerInterval = null;
 let callSeconds = 0;
 
 let nextStartTime = 0;
-const SILENCE_TIMEOUT_MS = 6000;
+const SILENCE_TIMEOUT_MS = 12000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
 let currentApiVersion = "v1beta"; 
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z funkcją rozłączania");
+  console.log("Wirtualna Dyspozytornia - Poprawka Narzędzia Rozłączania");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -325,8 +325,8 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      // Dodajemy do promptu żelazną zasadę dotyczącą rozłączania
-      systemPrompt += `\n\n[ZASADY ROZŁĄCZANIA]: Gdy zgłaszający stwierdzi, że nie potrzebuje już pomocy, albo gdy sam uznasz, że zgłoszenie zostało w pełni obsłużone, powiedz pożegnanie (np. "Jeśli moja dalsza pomoc nie jest potrzebna, dziękuję za zgłoszenie i rozłączam się.") i BEZWZGLĘDNIE wywołaj funkcję narzędziową "zakoncz_polaczenie", aby fizycznie odłożyć słuchawkę.`;
+      // ZMIANA: Twardy i bezwzględny rozkaz dotyczący rozłączania
+      systemPrompt += `\n\n[ZASADY ROZŁĄCZANIA]: Gdy zgłaszający zrezygnuje z pomocy (np. pomyłka) lub gdy zgłoszenie dobiegnie końca, POŻEGNAJ SIĘ (np. "Rozumiem, dziękuję za zgłoszenie, rozłączam się.") i BEZWZGLĘDNIE wywołaj funkcję narzędziową "zakoncz_polaczenie". Nie pytaj o zgodę na rozłączenie, po prostu użyj narzędzia natychmiast!`;
 
       return { systemPrompt, detectedModel };
     } catch (e) {
@@ -371,18 +371,24 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: dispatcher.voice } } }
       },
       systemInstruction: { parts: [{ text: instructions }] },
-      // INICJALIZACJA NARZĘDZI (Funkcja rozłączania dla obu trybów)
       tools: [{
         functionDeclarations: [
           {
             name: "zakoncz_polaczenie",
-            description: "Zakończ i rozłącz połączenie alarmowe. Użyj tej funkcji ZAWSZE, gdy pożegnasz się ze zgłaszającym lub gdy on odłoży słuchawkę/odmówi pomocy."
+            description: "Zakończ i rozłącz połączenie alarmowe. Użyj ZAWSZE na koniec, po pożegnaniu ze zgłaszającym.",
+            // ZMIANA: Model otrzymał parametry do wypełnienia, aby nie omijał tej funkcji
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                powod: { type: "STRING", description: "Krótki powód rozłączenia np. 'Odmowa pomocy' lub 'Koniec wywiadu'" }
+              },
+              required: ["powod"]
+            }
           }
         ]
       }]
     };
 
-    // Jeśli to 112, dodajemy dodatkowo funkcję przełączania do 999
     if (callMode === "cpr") {
       setupPayload.tools[0].functionDeclarations.push({
         name: "przelacz_do_dyspozytora_999", 
@@ -428,8 +434,13 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         resetSilenceTimer();
       }
 
-      // OBSŁUGA FUNKCJI (Narzędzi) wywoływanych przez AI
-      const functionCalls = data.toolCall?.functionCalls;
+      // ZMIANA: Uniwersalne i pancerne wyłapywanie wywołań narzędzi z obu wariantów struktury Google
+      let functionCalls = data.toolCall?.functionCalls;
+      if (!functionCalls && data.serverContent?.modelTurn?.parts) {
+          const fcParts = data.serverContent.modelTurn.parts.filter(p => p.functionCall);
+          if (fcParts.length > 0) functionCalls = fcParts.map(p => p.functionCall);
+      }
+
       if (functionCalls && !isTransferringCall) {
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999" && callMode === "cpr") {
@@ -439,15 +450,22 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
             return;
           }
           if (call.name === "zakoncz_polaczenie") {
-            // Czekamy 3.5 sekundy, aby AI zdążyło wypowiedzieć "rozłączam się", zanim fizycznie odetniemy dźwięk
+            isTransferringCall = true; // Natychmiast blokujemy dalszy nasłuch mikrofonu
+            
             const status = document.getElementById("call-status");
             if (status) {
-              status.innerText = "Rozłączanie...";
+              status.innerText = "Kończenie połączenia...";
               status.style.color = "#f87171";
             }
+
+            // ZMIANA: Dynamiczne wyliczenie, ile sekund AI będzie jeszcze "mówić" z bufora (plus 0.5s marginesu)
+            let waitTime = audioContext && nextStartTime > audioContext.currentTime 
+                         ? (nextStartTime - audioContext.currentTime) * 1000 + 500 
+                         : 1500;
+            
             setTimeout(() => {
               endCall();
-            }, 3500);
+            }, waitTime);
             return;
           }
         }
