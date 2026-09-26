@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Wersja Ostateczna: Skaner API (od Cursora) + Czysty Mikrofon
+ * Wersja Ostateczna: Skaner API + Czysty Mikrofon + Niskie Opóźnienia
  */
 
 let currentNumber = "";
@@ -19,7 +19,8 @@ let callTimerInterval = null;
 let callSeconds = 0;
 
 let nextStartTime = 0;
-const SILENCE_TIMEOUT_MS = 6000;
+// Zwiększono czas oczekiwania na 12 sekund, by zapobiec przerywaniu generowania odpowiedzi
+const SILENCE_TIMEOUT_MS = 12000;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
 let currentApiVersion = "v1beta"; 
@@ -45,7 +46,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja Stabilna Scalona");
+  console.log("Wirtualna Dyspozytornia - Poprawka VAD i Latencji");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -148,7 +149,6 @@ async function fetchNearbyAEDs(lat, lon) {
   }
 }
 
-// LOGIKA SKANERA (OD CURSORA) - Przywrócona!
 const LIVE_MODEL_FALLBACKS = [
   "models/gemini-2.5-flash",
   "models/gemini-2.0-flash-exp",
@@ -210,6 +210,22 @@ async function discoverBidiModel() {
   }
   console.log("Brak modelu Live na liście API — używam zapasowego", LIVE_MODEL_FALLBACKS[0]);
   return { version: "v1beta", modelName: LIVE_MODEL_FALLBACKS[0] };
+}
+
+// Funkcja bezpiecznego ujednolicania jakości audio bez zniekształceń
+function downsampleBuffer(input, inRate, outRate) {
+  if (inRate === outRate) return input;
+  const ratio = inRate / outRate;
+  const outLen = Math.max(1, Math.floor(input.length / ratio));
+  const output = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const idx = i * ratio;
+    const i0 = Math.floor(idx);
+    const i1 = Math.min(i0 + 1, input.length - 1);
+    const frac = idx - i0;
+    output[i] = input[i0] * (1 - frac) + input[i1] * frac;
+  }
+  return output;
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -443,7 +459,9 @@ function startAudioStreaming() {
   if (audioProcessor) { audioProcessor.disconnect(); audioProcessor = null; }
   if (audioContext.state === 'suspended') audioContext.resume();
   const src = audioContext.createMediaStreamSource(mediaStream);
-  audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+  
+  // ROZWIĄZANIE OPÓŹNIEŃ: Zmniejszono bufor z 4096 do 2048, co podwaja szybkość wysyłania pakietów
+  audioProcessor = audioContext.createScriptProcessor(2048, 1, 1);
   
   src.connect(audioProcessor);
   const silentGain = audioContext.createGain();
@@ -458,11 +476,15 @@ function startAudioStreaming() {
     let sum = 0; 
     for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     
-    if (Math.sqrt(sum/input.length) > 0.02) resetSilenceTimer();
+    // ZNACZĄCO zmniejszono próg czułości (z 0.02 na 0.005), aby mikrofon wyłapywał mowę i wygaszał 12-sekundowy stoper
+    if (Math.sqrt(sum/input.length) > 0.005) resetSilenceTimer();
 
-    const pcm16 = new Int16Array(input.length);
-    for (let i = 0; i < input.length; i++) {
-      pcm16[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
+    // Wymuszenie 16kHz dla bezpieczeństwa
+    const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
+
+    const pcm16 = new Int16Array(resampled.length);
+    for (let i = 0; i < resampled.length; i++) {
+      pcm16[i] = Math.max(-1, Math.min(1, resampled[i])) * 0x7fff;
     }
 
     const bytes = new Uint8Array(pcm16.buffer);
@@ -474,7 +496,7 @@ function startAudioStreaming() {
     webSocket.send(JSON.stringify({
       realtimeInput: {
         mediaChunks: [{
-          mimeType: `audio/pcm;rate=${audioContext.sampleRate || 16000}`,
+          mimeType: `audio/pcm;rate=16000`, // Zablokowano stawkę na sztywno
           data: btoa(bin)
         }]
       }
