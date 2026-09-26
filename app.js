@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Ochrona przed halucynacją narzędzia rozłączania
+ * Zaktualizowano: Twarde wymuszanie rozłączania (parametryzacja narzędzia)
  */
 
 let currentNumber = "";
@@ -45,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z Naprawionym Narzędziem (Brak Halucynacji)");
+  console.log("Wirtualna Dyspozytornia - Wersja z Twardym Rozłączaniem");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -325,8 +325,8 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      // ZMIANA: Jasny, żelazny zakaz wypowiadania nazwy narzędzia.
-      systemPrompt += `\n\n[BARDZO WAŻNE - ZASADY ROZŁĄCZANIA]: Gdy zgłoszenie zostanie w pełni obsłużone lub zgłaszający odmówi pomocy (pomyłka), zakończ rozmowę. Powiedz TYLKO naturalne pożegnanie (np. "Rozumiem, dziękuję za zgłoszenie, rozłączam się") i BEZWZGLĘDNIE użyj systemowego narzędzia (Function Call) o nazwie "zakoncz_polaczenie".\nUWAGA: Nigdy nie mów na głos słów "zakończ połączenie" ani "wywołuję funkcję"! Użycie narzędzia to akcja w systemie, a nie tekst do wypowiedzenia na głos.`;
+      // ZMIANA: Bardzo restrykcyjny wymóg zwalniania linii
+      systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ. Kiedy dzwoniący zgłasza pomyłkę, rezygnuje z pomocy lub wywiad dobiegł końca, powiedz tylko krótkie pożegnanie i NATYCHMIAST użyj funkcji "zakoncz_polaczenie". Nieodłożenie słuchawki blokuje linię alarmową dla innych!`;
 
       return { systemPrompt, detectedModel };
     } catch (e) {
@@ -374,9 +374,16 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       tools: [{
         functionDeclarations: [
           {
-            // ZMIANA: Usunięto całkowicie 'parameters' - odchudzone narzędzie działa jak najprostszy guzik
+            // ZMIANA: Model musi wygenerować JSON z polem "akcja", co zmusza go do faktycznego użycia narzędzia
             name: "zakoncz_polaczenie",
-            description: "Fizycznie rozłącza trwające połączenie. Wywołaj to narzędzie ZAWSZE na samym końcu, natychmiast po pożegnaniu ze zgłaszającym."
+            description: "Narzędzie systemowe zwalniające linię. Używaj zawsze na zakończenie rozmowy alarmowej.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                akcja: { type: "STRING", description: "Zawsze wpisz słowo 'rozlacz'" }
+              },
+              required: ["akcja"]
+            }
           }
         ]
       }]
