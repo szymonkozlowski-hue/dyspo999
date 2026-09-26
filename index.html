@@ -66,6 +66,11 @@
     .action-btn.active-btn.toggled svg { fill: #1a1c23; }
     .action-label { font-size: 13px; font-weight: 400; color: #ffffff; letter-spacing: 0.5px; }
 
+    /* ZMIANA: Miejsce na logo centralnie pomiędzy siatką a przyciskiem rozłączania */
+    .active-call-logo { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: auto; margin-bottom: 20px; opacity: 0.5; pointer-events: none; }
+    .active-call-logo img { height: 20px; object-fit: contain; }
+
+    /* Przywrócono wyśrodkowanie czerwonej słuchawki */
     .hangup-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
     .hangup-btn { width: 72px; height: 72px; border-radius: 50%; background: #dc2626; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); }
   </style>
@@ -130,6 +135,11 @@
       <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div><span class="action-label">DODAJ</span></div>
       <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></div><span class="action-label">ZAWIEŚ</span></div>
       <div class="action-btn"><div class="action-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div><span class="action-label">WIĘCEJ</span></div>
+    </div>
+
+    <!-- ZMIANA: Nowy kontener z logo pośrodku ekranu (powyżej słuchawki) -->
+    <div class="active-call-logo">
+      <img src="logo2.png" alt="PGRM.pl">
     </div>
 
     <div class="hangup-container">
