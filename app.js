@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Sprzętowe odtwarzanie klawiatury (Web Audio API)
+ * Wersja: Stabilna (Zasady proceduralne + twarde rozłączanie)
  */
 
 let currentNumber = "";
@@ -20,11 +20,6 @@ let callSeconds = 0;
 
 let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 12000;
-
-// ZMIANA: Zmienne dla sprzętowego bufora klawiatury
-let typingAudioBuffer = null;
-let typingSourceNode = null;
-let userSpeechTimer = null;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
 let currentApiVersion = "v1beta"; 
@@ -50,7 +45,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Klawiatura Web Audio API");
+  console.log("Wirtualna Dyspozytornia - Wersja Stabilna (Procedury włączone)");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -72,7 +67,6 @@ function showError(msg) {
   clearTimeout(silenceTimer);
   clearInterval(callTimerInterval);
   releaseWakeLock();
-  stopTypingSound();
 
   const status = document.getElementById("call-status");
   if (status) {
@@ -95,38 +89,6 @@ function resetSilenceTimer() {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
     webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem: zawołaj halo i ponów swoje pytanie. PAMIĘTAJ: To symulacja, stosuj się do procedur w pliku procedury.txt" }] }], turnComplete: true } }));
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
-}
-
-// ZMIANA: Sprzętowe odtwarzanie klawiatury przez Web Audio API
-function startTypingSound() {
-  if (!isConnected || isTransferringCall) return;
-  if (audioContext && nextStartTime > audioContext.currentTime) return;
-  if (!typingAudioBuffer || typingSourceNode) return; // Plik niezładowany lub już gra
-  
-  try {
-    typingSourceNode = audioContext.createBufferSource();
-    typingSourceNode.buffer = typingAudioBuffer;
-    typingSourceNode.loop = true;
-    
-    // Ustawienie głośności klawiatury (0.35 to 35% oryginalnej głośności pliku)
-    const typingGain = audioContext.createGain();
-    typingGain.gain.value = 0.35; 
-    
-    typingSourceNode.connect(typingGain);
-    typingGain.connect(globalGainNode || audioContext.destination);
-    
-    typingSourceNode.start(0);
-  } catch (e) {
-    console.warn("Nie udało się odtworzyć klawiatury:", e);
-  }
-}
-
-function stopTypingSound() {
-  if (typingSourceNode) {
-    try { typingSourceNode.stop(); } catch(e){}
-    try { typingSourceNode.disconnect(); } catch(e){}
-    typingSourceNode = null;
-  }
 }
 
 async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
@@ -321,21 +283,10 @@ async function startCall() {
       globalGainNode.connect(audioContext.destination);
     }
     if (audioContext.state === 'suspended') audioContext.resume();
-    
-    // Odblokowanie kanału audio pustym dźwiękiem
     const unlockSource = audioContext.createBufferSource();
     unlockSource.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
     unlockSource.connect(audioContext.destination);
     unlockSource.start(0);
-
-    // ZMIANA: Pobieranie pliku klawiatury do pamięci RAM przy inicjacji połączenia
-    if (!typingAudioBuffer) {
-      fetch('typing.mp3')
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-        .then(buffer => { typingAudioBuffer = buffer; console.log("Klawiatura gotowa"); })
-        .catch(e => console.warn("Nie udało się załadować pliku typing.mp3. Sprawdź nazwę pliku i upewnij się, że leży w tym samym folderze.", e));
-    }
   } catch (e) { showError("Błąd sterownika audio: " + e.message); return; }
 
   if (!mediaStream) {
@@ -374,6 +325,7 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
+      // ZMIANA: Twardy zakaz używania zwrotów utrzymujących połączenie
       systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ, gdy dzwoniący rezygnuje z pomocy lub wywiad dobiegł końca. MASZ SUROWY ZAKAZ mówienia "proszę się nie rozłączać" ani "proszę czekać na linii" w takiej sytuacji. Powiedz WYŁĄCZNIE: "Przyjąłem, dziękuję za zgłoszenie, zwalniam linię" i NATYCHMIAST użyj funkcji "zakoncz_polaczenie".`;
 
       return { systemPrompt, detectedModel };
@@ -483,7 +435,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
-            stopTypingSound(); // Ucinamy klawiaturę, sztuczna inteligencja zaczyna mówić
             playAudioChunk(part.inlineData.data);
           }
         }
@@ -500,14 +451,12 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999" && callMode === "cpr") {
             isTransferringCall = true;
-            stopTypingSound();
             if (audioProcessor) { audioProcessor.onaudioprocess = null; audioProcessor.disconnect(); audioProcessor = null; }
             handleTransferTo999(call.args?.adres_zdarzenia || "brak", call.args?.co_sie_stalo || "nieokreślone");
             return;
           }
           if (call.name === "zakoncz_polaczenie") {
             isTransferringCall = true; 
-            stopTypingSound();
             
             const status = document.getElementById("call-status");
             if (status) {
@@ -541,7 +490,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
 async function handleTransferTo999(adres, opis) {
   clearTimeout(silenceTimer);
-  stopTypingSound();
   let wait = audioContext && nextStartTime > audioContext.currentTime ? (nextStartTime - audioContext.currentTime)*1000 + 500 : 1000;
   await sleep(wait);
   if (!isConnected) return;
@@ -576,16 +524,7 @@ function startAudioStreaming() {
     let sum = 0; 
     for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     
-    // Logika wykrywania, kiedy użytkownik przestał mówić
-    if (Math.sqrt(sum/input.length) > 0.005) {
-      resetSilenceTimer();
-      stopTypingSound();
-      
-      clearTimeout(userSpeechTimer);
-      userSpeechTimer = setTimeout(() => {
-        startTypingSound();
-      }, 1500);
-    }
+    if (Math.sqrt(sum/input.length) > 0.005) resetSilenceTimer();
 
     const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
 
@@ -643,8 +582,6 @@ function playAudioChunk(b64) {
 
 function endCall() {
   clearTimeout(silenceTimer);
-  clearTimeout(userSpeechTimer);
-  stopTypingSound();
 
   clearInterval(callTimerInterval);
   callTimerInterval = null;
