@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Usunięcie sprzecznych komunikatów przy rozłączaniu
+ * Zaktualizowano: Usunięcie sprzecznych komunikatów + Twoje reguły proceduralne + Dźwięk klawiatury
  */
 
 let currentNumber = "";
@@ -20,6 +20,10 @@ let callSeconds = 0;
 
 let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 12000;
+
+// Nowe zmienne dla dźwięku klawiatury
+let typingAudio = null;
+let userSpeechTimer = null;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
 let currentApiVersion = "v1beta"; 
@@ -45,7 +49,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z idealnym pożegnaniem");
+  console.log("Wirtualna Dyspozytornia - Wersja z idealnym pożegnaniem i klawiaturą");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -67,6 +71,7 @@ function showError(msg) {
   clearTimeout(silenceTimer);
   clearInterval(callTimerInterval);
   releaseWakeLock();
+  stopTypingSound(); // Zatrzymanie klawiatury przy błędzie
 
   const status = document.getElementById("call-status");
   if (status) {
@@ -89,6 +94,23 @@ function resetSilenceTimer() {
     if (!isConnected || !webSocket || webSocket.readyState !== WebSocket.OPEN || isTransferringCall) return;
     webSocket.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: "Halo? Nic nie mówię, cisza na linii. Zareaguj natychmiast głosem: zawołaj halo i ponów swoje pytanie. PAMIĘTAJ: To symulacja, stosuj się do procedur w pliku procedury.txt" }] }], turnComplete: true } }));
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
+}
+
+// Funkcje sterujące maskowaniem latencji (Dźwięk klawiatury)
+function startTypingSound() {
+  if (!isConnected || isTransferringCall) return;
+  // Jeśli AI właśnie do nas mówi, nie włączamy klawiatury
+  if (audioContext && nextStartTime > audioContext.currentTime) return;
+  
+  if (typingAudio && typingAudio.paused) {
+    typingAudio.play().catch(e => console.warn("Nie udało się odtworzyć dźwięku klawiatury:", e));
+  }
+}
+
+function stopTypingSound() {
+  if (typingAudio && !typingAudio.paused) {
+    typingAudio.pause();
+  }
 }
 
 async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
@@ -268,6 +290,14 @@ async function startCall() {
   }, 1000);
 
   isConnected = true; isTransferringCall = false; nextStartTime = 0;
+  
+  // Inicjalizacja dźwięku klawiatury
+  if (!typingAudio) {
+    typingAudio = new Audio('typing.mp3');
+    typingAudio.loop = true;
+    typingAudio.volume = 0.35; // Głośność uderzania w klawisze
+  }
+
   await requestWakeLock();
 
   try {
@@ -325,7 +355,6 @@ async function startCall() {
 
       if (aedContext) systemPrompt += `\n\n[DANE SYSTEMOWE - PUNKTY AED]:\n${aedContext}`;
       
-      // ZMIANA: Twardy zakaz używania zwrotów utrzymujących połączenie
       systemPrompt += `\n\n[KRYTYCZNA ZASADA ROZŁĄCZANIA]: Jako dyspozytor masz bezwzględny obowiązek ZWALNIAĆ LINIĘ, gdy dzwoniący rezygnuje z pomocy lub wywiad dobiegł końca. MASZ SUROWY ZAKAZ mówienia "proszę się nie rozłączać" ani "proszę czekać na linii" w takiej sytuacji. Powiedz WYŁĄCZNIE: "Przyjąłem, dziękuję za zgłoszenie, zwalniam linię" i NATYCHMIAST użyj funkcji "zakoncz_polaczenie".`;
 
       return { systemPrompt, detectedModel };
@@ -357,7 +386,6 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
   const resolvedModel = normalizeModelName(modelName);
   webSocket = new WebSocket(`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateContent?key=${CONFIG.GEMINI_API_KEY}`);
 
-  // ZMIANA: Zaktualizowano ukryty prompt startowy o twardy zakaz mówienia "nie rozłączaj się"
   const dispatchers = [
     { 
       voice: "Aoede", 
@@ -436,6 +464,8 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
+            // Skoro AI przesyła odpowiedź, wycisz klawiaturę
+            stopTypingSound();
             playAudioChunk(part.inlineData.data);
           }
         }
@@ -452,12 +482,14 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
         for (const call of functionCalls) {
           if (call.name === "przelacz_do_dyspozytora_999" && callMode === "cpr") {
             isTransferringCall = true;
+            stopTypingSound();
             if (audioProcessor) { audioProcessor.onaudioprocess = null; audioProcessor.disconnect(); audioProcessor = null; }
             handleTransferTo999(call.args?.adres_zdarzenia || "brak", call.args?.co_sie_stalo || "nieokreślone");
             return;
           }
           if (call.name === "zakoncz_polaczenie") {
             isTransferringCall = true; 
+            stopTypingSound();
             
             const status = document.getElementById("call-status");
             if (status) {
@@ -491,6 +523,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
 
 async function handleTransferTo999(adres, opis) {
   clearTimeout(silenceTimer);
+  stopTypingSound();
   let wait = audioContext && nextStartTime > audioContext.currentTime ? (nextStartTime - audioContext.currentTime)*1000 + 500 : 1000;
   await sleep(wait);
   if (!isConnected) return;
@@ -525,7 +558,17 @@ function startAudioStreaming() {
     let sum = 0; 
     for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     
-    if (Math.sqrt(sum/input.length) > 0.005) resetSilenceTimer();
+    // Logika wykrywania, kiedy użytkownik przestał mówić (Debounce)
+    if (Math.sqrt(sum/input.length) > 0.005) {
+      resetSilenceTimer();
+      stopTypingSound(); // Użytkownik mówi, wstrzymaj stukanie
+      
+      clearTimeout(userSpeechTimer);
+      userSpeechTimer = setTimeout(() => {
+        // Użytkownik przestał mówić na 1.5s -> uruchom stukanie z nadzieją, że AI właśnie liczy
+        startTypingSound();
+      }, 1500);
+    }
 
     const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
 
@@ -583,6 +626,8 @@ function playAudioChunk(b64) {
 
 function endCall() {
   clearTimeout(silenceTimer);
+  clearTimeout(userSpeechTimer);
+  stopTypingSound();
 
   clearInterval(callTimerInterval);
   callTimerInterval = null;
