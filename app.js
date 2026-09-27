@@ -1,7 +1,7 @@
 /**
  * WIRTUALNA DYSPOZYTORNIA MEDYCZNA 999 / CPR 112
  * Architektura: Web Audio API + Gemini Live API + OSM AED
- * Zaktualizowano: Usunięcie sprzecznych komunikatów + Twoje reguły proceduralne + Dźwięk klawiatury
+ * Zaktualizowano: Sprzętowe odtwarzanie klawiatury (Web Audio API)
  */
 
 let currentNumber = "";
@@ -21,8 +21,9 @@ let callSeconds = 0;
 let nextStartTime = 0;
 const SILENCE_TIMEOUT_MS = 12000;
 
-// Nowe zmienne dla dźwięku klawiatury
-let typingAudio = null;
+// ZMIANA: Zmienne dla sprzętowego bufora klawiatury
+let typingAudioBuffer = null;
+let typingSourceNode = null;
 let userSpeechTimer = null;
 
 let savedMedicalContext = { systemPrompt: "", detectedModel: "" };
@@ -49,7 +50,7 @@ function showPhone() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("Wirtualna Dyspozytornia - Wersja z idealnym pożegnaniem i klawiaturą");
+  console.log("Wirtualna Dyspozytornia - Klawiatura Web Audio API");
   if (sessionStorage.getItem("station_auth") === "true") showPhone();
 });
 
@@ -71,7 +72,7 @@ function showError(msg) {
   clearTimeout(silenceTimer);
   clearInterval(callTimerInterval);
   releaseWakeLock();
-  stopTypingSound(); // Zatrzymanie klawiatury przy błędzie
+  stopTypingSound();
 
   const status = document.getElementById("call-status");
   if (status) {
@@ -96,20 +97,35 @@ function resetSilenceTimer() {
   }, remainingSpeakingTime + SILENCE_TIMEOUT_MS);
 }
 
-// Funkcje sterujące maskowaniem latencji (Dźwięk klawiatury)
+// ZMIANA: Sprzętowe odtwarzanie klawiatury przez Web Audio API
 function startTypingSound() {
   if (!isConnected || isTransferringCall) return;
-  // Jeśli AI właśnie do nas mówi, nie włączamy klawiatury
   if (audioContext && nextStartTime > audioContext.currentTime) return;
+  if (!typingAudioBuffer || typingSourceNode) return; // Plik niezładowany lub już gra
   
-  if (typingAudio && typingAudio.paused) {
-    typingAudio.play().catch(e => console.warn("Nie udało się odtworzyć dźwięku klawiatury:", e));
+  try {
+    typingSourceNode = audioContext.createBufferSource();
+    typingSourceNode.buffer = typingAudioBuffer;
+    typingSourceNode.loop = true;
+    
+    // Ustawienie głośności klawiatury (0.35 to 35% oryginalnej głośności pliku)
+    const typingGain = audioContext.createGain();
+    typingGain.gain.value = 0.35; 
+    
+    typingSourceNode.connect(typingGain);
+    typingGain.connect(globalGainNode || audioContext.destination);
+    
+    typingSourceNode.start(0);
+  } catch (e) {
+    console.warn("Nie udało się odtworzyć klawiatury:", e);
   }
 }
 
 function stopTypingSound() {
-  if (typingAudio && !typingAudio.paused) {
-    typingAudio.pause();
+  if (typingSourceNode) {
+    try { typingSourceNode.stop(); } catch(e){}
+    try { typingSourceNode.disconnect(); } catch(e){}
+    typingSourceNode = null;
   }
 }
 
@@ -290,14 +306,6 @@ async function startCall() {
   }, 1000);
 
   isConnected = true; isTransferringCall = false; nextStartTime = 0;
-  
-  // Inicjalizacja dźwięku klawiatury
-  if (!typingAudio) {
-    typingAudio = new Audio('typing.mp3');
-    typingAudio.loop = true;
-    typingAudio.volume = 0.35; // Głośność uderzania w klawisze
-  }
-
   await requestWakeLock();
 
   try {
@@ -313,10 +321,21 @@ async function startCall() {
       globalGainNode.connect(audioContext.destination);
     }
     if (audioContext.state === 'suspended') audioContext.resume();
+    
+    // Odblokowanie kanału audio pustym dźwiękiem
     const unlockSource = audioContext.createBufferSource();
     unlockSource.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
     unlockSource.connect(audioContext.destination);
     unlockSource.start(0);
+
+    // ZMIANA: Pobieranie pliku klawiatury do pamięci RAM przy inicjacji połączenia
+    if (!typingAudioBuffer) {
+      fetch('typing.mp3')
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(buffer => { typingAudioBuffer = buffer; console.log("Klawiatura gotowa"); })
+        .catch(e => console.warn("Nie udało się załadować pliku typing.mp3. Sprawdź nazwę pliku i upewnij się, że leży w tym samym folderze.", e));
+    }
   } catch (e) { showError("Błąd sterownika audio: " + e.message); return; }
 
   if (!mediaStream) {
@@ -464,8 +483,7 @@ async function initLiveConnection(instructions, modelName, callMode = "medical")
       if (data.serverContent?.modelTurn?.parts) {
         for (const part of data.serverContent.modelTurn.parts) {
           if (part.inlineData?.data) {
-            // Skoro AI przesyła odpowiedź, wycisz klawiaturę
-            stopTypingSound();
+            stopTypingSound(); // Ucinamy klawiaturę, sztuczna inteligencja zaczyna mówić
             playAudioChunk(part.inlineData.data);
           }
         }
@@ -558,14 +576,13 @@ function startAudioStreaming() {
     let sum = 0; 
     for (let i = 0; i < input.length; i++) sum += input[i]*input[i];
     
-    // Logika wykrywania, kiedy użytkownik przestał mówić (Debounce)
+    // Logika wykrywania, kiedy użytkownik przestał mówić
     if (Math.sqrt(sum/input.length) > 0.005) {
       resetSilenceTimer();
-      stopTypingSound(); // Użytkownik mówi, wstrzymaj stukanie
+      stopTypingSound();
       
       clearTimeout(userSpeechTimer);
       userSpeechTimer = setTimeout(() => {
-        // Użytkownik przestał mówić na 1.5s -> uruchom stukanie z nadzieją, że AI właśnie liczy
         startTypingSound();
       }, 1500);
     }
